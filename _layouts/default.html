@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>{% if page.title %} {{ page.title }} - {% endif %} Felix' tech blog</title>
+		 <link rel="stylesheet" href="{{site.baseurl}}/style.css" />
+		 <meta name="description" content="{{site.description}}"/>
+		 <meta name="author" content="{{site.author}}"/>
+	</head>
+	<body>
+		<header>
+			<hr />
+			<h1><a href="{{site.baseurl}}/">Sewing up your favourite Puppet</a></h1>
+			<h4>Felix' tech blog</h4>
+			<a href="{{site.baseurl}}/2014/09/29/about.html">About</a>
+			<hr />
+		</header>
+		<main>
+			{{ content }}
+		</main>
+	</body>
+</html>

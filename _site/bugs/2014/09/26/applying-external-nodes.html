@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title> Applying External Nodes -  Felix' tech blog</title>
+		 <link rel="stylesheet" href="/style.css" />
+		 <meta name="description" content=""/>
+		 <meta name="author" content=""/>
+	</head>
+	<body>
+		<header>
+			<hr />
+			<h1><a href="/">Sewing up your favourite Puppet</a></h1>
+			<h4>Felix' tech blog</h4>
+			<a href="/2014/09/29/about.html">About</a>
+			<hr />
+		</header>
+		<main>
+			<article>
+	<header>
+		<h1>Applying External Nodes</h1>
+		<span class="category">Posted in bugs</span><br/>
+		<span class="author">by Felix Frank</span>
+	</header>
+	<p>Learning environment basics, with a bold venture into the brave new world of directory environments.</p>
+
+<h3 id="sudden-breakage-of-puppet-apply-for-some-users">Sudden breakage of puppet apply for some users</h3>
+
+<p>Things started harmlessly, with <a href="https://groups.google.com/d/msgid/puppet-users/9323195d-0c03-4137-94f4-de671c06f3c2%40googlegroups.com?utm_medium=email&amp;utm_source=footer">yet another mailing list post</a>.
+A user was reporting strange behavior of <code>puppet apply</code>.
+The resource from the applied manifest was being ignored, apparently.</p>
+
+<p>Misunderstandings about Puppet behaving in an unexpected fashion are commonplace.
+But after exchanging some debugging instructions and further issues, it soon became clear that something was going seriously
+wrong.
+Will Partain then notified me about <a href="https://tickets.puppetlabs.com/browse/PUP-3258">PUP-3258</a> off-list.
+My curiosity was piqued.</p>
+
+<h3 id="dissecting-the-report">Dissecting the report</h3>
+
+<p>Will had left a great bug report! It was a little thin on the description, but came with a complete lab environment for
+reproducing it. This was especially valuable to me, having never used an ENC of any kind, much less an ENC script.
+The included README file did a good job of describing what was happening, and what should have been happening instead.</p>
+
+<p>My preference for trying buggy manifests is to place them somewhere in <code>/tmp</code> and using <code>puppet apply</code> on them directly.
+Things that are directly involved with master operations, I put in <code>~/.puppet</code>, so that I can just launch a <code>WEBrick</code> master
+without becoming root.  PUP-3258 used some of both.
+The issue caused <code>puppet apply</code> to make inappropriate use of the values from <code>puppet.conf</code> for
+some reason. Having a simple Puppet environment prepared in <code>~/.puppet</code> comes in handy for this kind of occasion as well.</p>
+
+<p>Will’s scenario included</p>
+
+<ul>
+  <li>a <code>site.pp</code> file</li>
+  <li>a module</li>
+  <li>an ENC script</li>
+</ul>
+
+<p>all reasonably stripped down to some very basic content that demonstrated the issue. He triggered it with a rather complex
+invocation.</p>
+
+<pre><code>/usr/bin/sudo /usr/bin/puppet apply \
+    --node_terminus exec --external_nodes /home/partain/t/puppet-vapply-bug/enc \
+    --modulepath /home/partain/t/puppet-vapply-bug/modules:/etc/puppet/modules \
+    --parser future --test --diff_args=-U1 --noop \
+    /home/partain/t/puppet-vapply-bug/site.pp
+</code></pre>
+
+<p>I would ignore <code>sudo</code> of course, but what interested me most was whether I could get rid of the module and <code>--modulepath</code> flag.
+It was simple - the example ENC returned a classes value of <code>[ foo ]</code>, so by changing the YAML to</p>
+
+<pre><code>classes: []
+</code></pre>
+
+<p>I could just avoid including the module, and shed the need for a special <code>modulepath</code>. The bug remained reproducible.</p>
+
+<p>My first hope was that <code>--parser future</code> was causing trouble. That would have narrowed down the possible causes nicely.
+But removing it didn’t change the faulty behavior. I was also reasonably certain that <code>--test</code> (not sensible with <code>apply</code>
+anyway), <code>--diff_args</code> and <code>--noop</code> had nothing to do with the problem. And sure enough, removing those options had no
+effect. What <em>was</em> necessary to keep reproducing the issue were the options for external nodes.</p>
+
+<pre><code>bundle exec puppet apply /tmp/site.pp --node_terminus exec --external_nodes /tmp/enc
+</code></pre>
+
+<p>That’s manageable - now the search could begin.</p>
+
+<h3 id="locating-the-regression">Locating the regression</h3>
+
+<p>The issue was known to have occurred at some point in between the <code>3.6.1</code> and <code>3.7</code> releases.
+First point of order: Verify that current <code>master</code> is still affected. It was.</p>
+
+<p>Since I had no clear idea of where to start, and had a very direct way of reproducing, things
+called for a <code>git</code> bisection. The best way to run the code from your <code>git</code> checkout is via <code>bundler</code>,
+but there was a slight complication here. The <code>3.6</code> and <code>3.7</code> tags locked the <code>rspec</code> gem
+into different versions. So when the bundle is in shape to run one version, it will refuse to run the other.
+This is especially annoying, seeing as <code>rspec</code> is all about testing, and not about running the application at all.</p>
+
+<p>But no big deal - it’s just important to make sure that <code>bundler</code> does not skew the result of the
+bisection test. This can be achieved by simply calling <code>bundle update</code> on each step. I used the following scriptlet.</p>
+
+<pre><code>#!/bin/sh
+bundle update
+bundle exec puppet apply /tmp/site.pp \
+    --node_terminus exec --external_nodes /tmp/enc \
+    | grep -q '/tmp/site.pp is in use'
+</code></pre>
+
+<p>The <code>grep</code> was effective because the correct manifest was prepared with the output to <code>grep</code> for (using a
+<code>notify</code> resource). <a href="http://nethackwiki.com/wiki/Tsurugi_of_Muramasa">Happy bisecting!</a></p>
+
+<pre><code>git bisect good 3.6.1
+git bisect bad 3.7.0
+git bisect run /tmp/bisect-test
+</code></pre>
+
+<p>Yes, this took a while, what with phoning home to <a href="http://rubygems.org">rubygems.org</a> on each run (and mostly
+just accepting the present bundle anyway). Still, as expected, it unearthed the apparently innocuous change
+that broke this scenario.</p>
+
+<pre><code>(PUP-2519) Create fallback environment only for default production
+</code></pre>
+
+<p>To verify that the identified patch was indeed all that was wrong with <code>3.7</code> and above, I like to try and
+revert it on <code>master</code>. This proved quite difficult. The suspect patch concerned directory environments,
+and those have seen quite some stitching prior to the <code>3.7.0</code> release. Reverting my change resulted in
+conflicts in almost all affected files. Without an understanding of how any of that code worked, it
+would have been way too much work to resolve all of that.</p>
+
+<p>So I scrapped that idea and checkout out the offending revision again. Time for some sharp looking at
+what was happening there.</p>
+
+<h3 id="finding-a-remedy">Finding a remedy</h3>
+
+<p>Full disclosure, I have no idea how legacy environments worked code-wise, much less the shiny new
+directory environments. What’s more, I had never traced the code that makes <code>puppet apply</code> work.
+As such, I had a hard time figuring out the intent of the code changes in question.</p>
+
+<p>Next easiest step: Revert each patch in the offending commit individually, and see if one of them is solely
+responsible for the problem.  It turned out to be
+<a href="https://github.com/puppetlabs/puppet/commit/53d391b37f0a5f8f5937fcd7584fb6aae6db424b#diff-3acace79a768858f1f8964ecdb582af2L190">a single line</a> in <code>lib/application/apply.rb</code>.</p>
+
+<pre><code>-    Puppet.override(:environments =&gt; Puppet::Environments::Static.new(apply_environment)) do
++    Puppet.override(:current_environment =&gt; apply_environment) do
+</code></pre>
+
+<p>Still no idea what was going on there. So I first took a look at the <code>Environments::Static</code> class definition.
+It is <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/environments.rb#L55-91">relatively simple</a> and allows the creation of a set of environments.
+I then got curious what this <code>apply_environment</code> was all about, anyway.
+The answer is right above its use in the code.</p>
+
+<p>The <code>apply_environment</code> is a pragmatic approach to making <code>puppet apply</code> work the way it does:
+It is basically the <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/application/apply.rb#L185-188">current environment with the site manifest overridden</a>
+to the manifest that was specified on the command line. The next thing I wanted to know was
+how the whole environment lookup process worked. I’m not big on the Ruby debugger (even though
+<a href="http://pryrepl.org/">pry</a> is pretty neat), and my first try is often good old <code>printf</code> debugging. Sorry, <em>puts</em> debugging.</p>
+
+<p>Since the issue revolved around <code>nodes</code> somehow (the <code>exec</code> node terminus caused the problem, after all),
+I wanted to find out how the <code>Node</code> class interacted with environments. I added output to <code>Node#environment=</code>
+to see what values it was receiving. While at it, I also pulled a respective stacktrace using <code>Kernel#caller</code>.
+This is almost always enlightening, since it helps understanding the way several code pieces work together, especially
+when you’re not familiar with any or most of them. Comparing outputs, this revealed two things:</p>
+
+<ol>
+  <li>The caller is <code>lib/puppet/indirector/node/exec.rb</code> when using the ENC script, as opposed to <code>plain.rb</code> otherwise.</li>
+  <li>In the former case, it passes a value of <code>:production</code> instead of <code>production</code>.</li>
+</ol>
+
+<p>I was still unsure what I was looking at, but the pieces were almost complete. The <code>exec</code> variant of the
+<code>node</code> indirector terminus (Masterzen has a <a href="http://www.masterzen.fr/2011/12/11/the-indirector-puppet-extensions-points-3/">great article</a>
+for understanding what the indirector is all about) sets the environment <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/indirector/node/exec.rb#L24">if none is returned from the
+data source</a>. Something about this call was wrong, apparently. I still had no idea why the override in
+<code>Application::Apply</code> had any relation to this call, but it looked like a good clue.</p>
+
+<p>I compared the <code>exec</code> terminus to the way that other termini handle this, and immediately found my answer
+in the <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/indirector/node/ldap.rb#L38">LDAP</a> terminus.
+Digging through its <a href="https://github.com/puppetlabs/puppet/commits/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/indirector/node/ldap.rb">history</a>, it became obvious that his was also <a href="https://github.com/puppetlabs/puppet/commits/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/indirector/node/ldap.rb">quite recent</a>.
+My hunch that sending the environments name (or string representation) to the node was wrong seemed increasingly likely.
+<a href="https://github.com/ffrank/puppet/commit/3451ecdcaff31e786193021cd3f66e77a314edbb#diff-587caec60973192c53e61501ce698080L24">The fix</a> was trivial of course.</p>
+
+<p>So what had been happening? The <code>exec</code> terminus initialized the <code>node</code> object with the environment <code>"production"</code>, the name
+of the current environment (which was actually the specially prepared <code>apply_environment</code>). This caused
+a <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/lib/puppet/node.rb#L74">lookup</a>
+among the available environments. This returned the unaltered <code>production</code> environment, so that the override
+of the <code>manifest</code> setting for <code>puppet apply</code> was short-circuited. Passing the actual <code>environment</code> object would retain
+the override. The issue had cropped up because <code>Environments::Static</code> had previously hidden all environments away,
+so that the lookup of <code>"production"</code>, or whatever environment, still did the right thing.</p>
+
+<p>When I realized this, I grew suspicious that we still might have a problem if this default case was not hit. In other
+words, I worried that an ENC script that did actually return an environment name would still trigger the issue.
+This could be confirmed quickly, but would have to wait for yet another ticket.</p>
+
+<h3 id="creating-a-test">Creating a test</h3>
+
+<p>As so often, the greater challenge was to devise a test that would keep this regression from cropping up again
+by indicating it through a failure. I looked at the <a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/spec/unit/indirector/node/exec_spec.rb">unit tests</a>
+for the <code>exec</code> node terminus, which does already cover some scenarios concerning environments.
+But I wasn’t really sure what I would want to test here. The problem was that a symbol or string was being sent
+to <code>Node#environment=</code> but I couldn’t immediately find an expectation that was broken by the bug.
+I also felt that this check wouldn’t adequately represent the problem we had faced here.</p>
+
+<p>So I took a look at the integration tests for <code>puppet apply</code>, and found a test that was
+<a href="https://github.com/puppetlabs/puppet/blob/53d391b37f0a5f8f5937fcd7584fb6aae6db424b/spec/integration/application/apply_spec.rb#L33-50">pretty close</a> to what I had in mind.
+I cloned it and extended it to include two manifests and an ENC script, just like my manual test.
+I got my extended test to work quickly enough, but then spent quite a while trying
+to make it actually use my prepared site manifest while the bug was still present. The key was
+to <a href="https://github.com/ffrank/puppet/blob/3451ecdcaff31e786193021cd3f66e77a314edbb/spec/integration/application/apply_spec.rb#L81">manipulate the settings for the test</a> to include the <code>manifest</code> setting.</p>
+
+<h3 id="final-thoughts">Final thoughts</h3>
+
+<p>I never really saw a use for ENCs (and honestly, still don’t :-) and hence hadn’t ever bothered looking at the code.
+I would have never grabbed this bug if I hadn’t gotten involved in that mailing list thread. It’s always a good idea
+to stay in touch with our peers in the user base. It’s not the first time that I learned something new this way.
+It was especially refreshing to finally poke around in environments and the work that has gone into the new (and
+awesome) directory environments.</p>
+
+</article>
+
+		</main>
+	</body>
+</html>

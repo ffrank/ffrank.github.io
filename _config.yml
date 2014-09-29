@@ -1,0 +1,12 @@
+name: Sewing up your favourite Puppet
+description: Felix' tech blog
+author: Felix Frank
+author_email: Felix.Frank@Alumni.TU-Berlin.de
+
+category_dir: /
+url: http://ffrank.github.io/
+permalink: pretty
+exclude:
+ - Gemfile
+ - Gemfile.lock
+ - README.md
