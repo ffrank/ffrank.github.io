@@ -10,13 +10,13 @@ truly. Read about FOSDEM, Config Management Camp and shenanigans with peers from
 ### Getting to the conference
 
 It was that magic time of the year again - Belgium lured professionals and enthusiasts to great 
-conferences. FOSDEM is perhaps the world’s largest gathering of open source software contributors 
-and vendors. For me, the place to be afterwards is Config Management Camp, a gathering of users and 
-developers of configuration management software such as Puppet, Ansible or Chef. (Fun fact: there 
-was broader interest in Ansible than Chef this year, apparently.)
+conferences. [FOSDEM](http://fosdem.org) is one of the world’s largest gathering of open source software contributors 
+and vendors. For me, the place to be afterwards is [Config Management Camp](http://cfgmgmtcamp.eu), a gathering of users and 
+developers of configuration management software such as Puppet, Ansible or Chef. (Fun fact: attendees
+expressed broader interest in Ansible than Chef this year, apparently.)
 
 Getting to Belgium is a breeze for me - I don’t live far from Berlin’s TXL airport, which is 
-especially convenient for its short walking distances. As such, I set foot on Belgian ground some 
+especially convenient, thanks to its short walking distances. As such, I set foot on Belgian ground some 
 two hours after leaving my apartment.
 
 However, for reasons that I will go into in a bit, I came a little ill prepared. I had not plotted 
@@ -45,17 +45,16 @@ to campus the next morning. The quarter of town that I wandered (Ixelles, I beli
 impressive. Historic architecture next to modern blocks and streets. Parks and public art wherever 
 you look.
 
-![Streets of 
-Brussels](https://cloud.githubusercontent.com/assets/436765/6260239/11b5b0cc-b7dc-11e4-8b7d-7d26f58e
-d18d.jpg)
+![Streets of Brussels](https://cloud.githubusercontent.com/assets/436765/6260239/11b5b0cc-b7dc-11e4-8b7d-7d26f58ed18d.jpg)
 
 But I’m getting ahead of myself. After all, I did not have the luxury of checking into the hotel 
 and getting to sleep right away.
 
 ### No sleep till campus
 
-My conference season started of straight from an intense week of crunching at work. By the way - 
-quick shoutout to MPeX.net GmbH who sponsored my whole trip and keep paying me for my humble 
+My conference season started off straight from an intense week of crunching at work. By the way - 
+quick shoutout to [MPeX.net GmbH](http://mpexnetworks.de)
+who sponsored my whole trip and keep paying me for my humble 
 developsing skills. So not only had I worked crazy hours for a straight week, I was also still on 
 call duty during the last night before the con.
 
@@ -76,24 +75,26 @@ had been to some previous incarnations. And indeed, the atmosphere is quite amaz
 excited and curious and milling about. The sheer number of people that is scattered across the 
 campus can give you the feeling of being part of some sort of strange and elaborate ant colony.
 
-Within few minutes of wandering the halls, I chanced upon Eric Sorenson, the first of many Puppet 
+Within few minutes of wandering the halls, I chanced upon [Eric Sorenson](https://twitter.com/ahpook), the first of many Puppet 
 Labs employees to follow. The opening keynote was part of my schedule, although in hindsight, half 
 an hour of additional sleep would have served me better. At least this way, I caught the useful 
 advice to “not die on the slippery pathways between buildings”. First talks were in 
-Configuration Management by Ryan and Adrian, including a sudden shout-out to me by the latter - 
-thanks dude, that was rad! Met up with Peter after the talk as well.
+Configuration Management by [Ryan](https://twitter.com/ryancoleman) and [Adrian](https://twitter.com/nullfinch)
+(who noticed and greeted my mid-sentence - thanks dude, that was rad). Met up with
+[Peter](https://twitter.com/petersouter) after the talk as well.
 
-After attending some urgent business (as in actual business - you won’t find toilet metaphors on 
-this blog) I collected some advice from Eric to find Henrik in the cafeteria. To my amazement, he 
-was not alone but in the company of Luke, Brian, Gareth, James and others, forming a veritable 
-Puppet regular’s table.
+After attending some urgent business (as in actual business - you won’t find toilet euphemisms on 
+this blog) I collected some advice from Eric to find [Henrik](https://twitter.com/hel) in the cafeteria. To my amazement, he 
+was not alone but in the company of [Luke](https://twitter.com/puppetmasterd),
+[Brian](https://twitter.com/brianstein), [Gareth](https://twitter.com/garethr),
+[James](https://twitter.com/kartar) and others, forming a veritable Puppet regular’s table.
 
 #### So many peas, such small pots
 
 After trading some more antics with Adrien, I tried to make my way into the Perl language room to 
 hear about the new characteristics of Perl 6. No luck though - the language rooms were small and 
 packed, for the most part. Perl in particular was not only fully seated with all walls lined by 
-standing listeners, there were also people sitting in the space in front of the seats, and in 
+standing listeners. There were also people sitting in the space in front of the seats, and in 
 virtually any square foot of empty floor.
 
 Quick aside: one language room that was not crowded (at least at some times during day one) was 
@@ -105,33 +106,34 @@ particular struck me. They had a larger auditorium and I was reminded of my univ
 inconsiderate folks hogging the edge seats of otherwise empty rows abound. A diligent volunteer at 
 the door guided stragglers towards easily reachable seats and started bouncing them away after 
 those were all taken. After the morning in the crowded configuration management room, I was rather 
-incredulous at the latter. There was a lesson to be learned:
+incredulous at the latter. There was a lesson here:
 
 > Before a talk starts, the organizers should make the seated attendees flush either to one side of 
 the rows or the middle, leaving few or no empty seats between each other. This will allow 
 stragglers to proceed to free seats even during the talk without causing a commotion.
+
+Such hiccups aside, the talk program was truly amazingly organized by the staff of volunteers.
 
 #### Unique experience
 
 Another highlight found me by surprise - one speaker in configuration management didn’t show up. 
 The room organizers stood up to the challenge and took the stage for an impromptu Ask Me Anything 
 session, themed around open source communities’ health and how to measure it. It contained a 
-healthy side-dish on the topic of diversity in our larger community, which ended up as a recurring 
+tasty side-dish on the topic of diversity in our larger community, which ended up as a recurring 
 theme throughout the cons. More on these later.
 
 Other notable impressions from FOSDEM:
 
-* met and chatted with David Lutterkort
+* met and chatted with [David Lutterkort](https://twitter.com/lutterkort)
 * the cafeteria serves no food whatsoever - bring your own, likely from the decentralized food court
 * note to self, do get at least one waffle next year - what’s wrong with you?
 * the Puppet stand was hosted by the illustrious Johan De Wit
-* Mitchell Hashimoto could occasionally be found at the inofficial Puppet Labs cafeteria table
-* Kara and Dawn were absolutely rocking the configuration management room
+* [Mitchell Hashimoto](https://twitter.com/mitchellh) could occasionally be found at the inofficial Puppet Labs cafeteria table
+* [Kara](https://twitter.com/feynudibranch), [Dawn](https://twitter.com/geekygirldawn) et al were absolutely rocking the configuration management room
 * getting into James’ talk was difficult but rewarding
 * both Adrien and Eric claim to have the attention span of a young squirrel - coincidence?
 
-![Perl](https://cloud.githubusercontent.com/assets/436765/6260241/11b85afc-b7dc-11e4-9165-16d45d753a
-e9.jpg)
+![Perl](https://cloud.githubusercontent.com/assets/436765/6260241/11b85afc-b7dc-11e4-9165-16d45d753ae9.jpg)
 
 Towards the end, I caught one talk on the main track after all - Larry Wall promised to present on 
 the imminent release of Perl 6. In front of a packed lecture hall, this grand master of open source 
@@ -140,18 +142,19 @@ the Perl languages, strung into a loose narrative. While rather entertaining, it
 opportunities (where were the movie stills with silly captions?) and generally failed to live up to 
 its potential due to a somewhat wooden delivery. Still, we were witnessing living history on stage, 
 and it sure was entertaining to watch jet-lagged Americans loosing it to the surreality of it all. 
-Check out Adrien’s twitter feed from February 1st for all the details.
+Check out [Adrien's twitter feed](https://twitter.com/nullfinch) from February 1st for all the details.
 
 ### Condensing it
 
-After The Tolkien Lecture, I hung out with Adrien, Peter and Morgan. After some antics in the 
-cafeteria and the futile attempt to get into a talk on testing, we were found by David and Igor. 
+After The Tolkien Lecture, I hung out with Adrien, Peter and [Morgan](https://twitter.com/knittynerd). After some antics in the 
+cafeteria and the futile attempt to get into a talk on testing, we were found by
+[David](https://twitter.com/dev_el_ops) and [Igor](https://twitter.com/hirojin). 
 Adrien and Morgan wrapped up their conference duties and we all departed for Ghent. Config 
 Management Camp was finally at hand.
 
 Transfer to Ghent is always quite pleasant. Train tickets are inexpensive, yet the trains are quite 
 comfortable and practical. Some two hours of riding and shenanigans later, we arrived in Ghent Sint 
-Pieter’s to check into our respective hotels and meet up with Henrik et al for Sushi soon after. 
+Pieter's to check into our respective hotels and then meet up with Henrik et al for sushi.
 I was amazed to finally lay eyes on the breath-taking old town core, after having spent the entire 
 con last year near the station and college.
 
@@ -159,26 +162,29 @@ con last year near the station and college.
 c84.jpg)
 
 Config Management Camp is smaller than FOSDEM by at least an order of magnitude. All attendees can 
-fit themselves into a large lobby for coffee and snacks. It’s not unlike a large family reunion, 
+fit themselves into a large lobby for coffee and snacks. It's not unlike a large family reunion, 
 and it even feels kind of like that. Everyone gets together, catches up, builds new connections and 
-generally has a lot of fun. The talks are much more concentrated as well, naturally. There are only 
-few tracks, and quite a number of slots that are only filled by the main track. This year, the 
+generally has a lot of fun. The talks are much more focused as well, naturally. There are only 
+a handful of tracks, and quite a number of slots that are only filled on the main track. This year, the 
 amazing keynotes featured Mitchell Hashimoto and other excellent speakers.
-Not much of a tracker
 
-The Puppet track was quite captivating again. Aside from Luke’s traditional Q&A session, it 
-boasted talks from various Puppet Labs employees such as Morgan and Colleen, as well as reknown 
-community members like RI. I had resolved to not glue myself onto this track exclusively, as I had 
-last year, but the folks didn’t make it easy. The more interesting Chef talks overlapped with 
+#### Not much of a tracker
+
+The Puppet track was quite captivating again. Aside from Luke's traditional Q&A session, it 
+boasted talks from various Puppet Labs employees such as Morgan and [Colleen](https://twitter.com/pdx_krinkle),
+as well as reknown 
+community members like [RI](https://twitter.com/ripienaar).
+I had resolved to not glue myself onto this track exclusively the way I had handled it
+last year, but the folks didn't make it easy. The more interesting Chef talks overlapped with 
 ones that I felt to be obligatory in Puppet. As a compromise, I did manage to catch some main track 
-action, such as Gareth’s wonderful presentation (or, as I felt, his sermon - difficult to grasp 
+action, such as Gareth's wonderful presentation (or, as I felt, his sermon - difficult to grasp 
 in full depth, broad and encompassing, and leaving you with a sense that there is a greater scheme 
 of things).
 
 I cannot stress this enough - Config Management Camp is much denser with networking opportunities 
-than FOSDEM, with coordinated breaks, free catering, a semi-open bar at the first day’s evening 
+than FOSDEM, with coordinated breaks, free catering, a semi-open bar at the first day's evening 
 and a general atmosphere that is much more personal. Shout-out to the great Puppet Labs folks (and 
-Igor!) who took me out on Tuesday. Funniest night of this year - you know who you are.
+Igor!) who took me out on Tuesday. Funniest night in quite a while - you know who you are.
 
 ### Recurring themes
 
