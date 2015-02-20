@@ -1,0 +1,20 @@
+
+### Simple? Eh, you know...
+
+[first challenge is understanding the fileserving code at all]
+
+    lib/puppet/file_serving/*.rb
+    lib/puppet/indirector/file_*/*.rb
+    lib/puppet/type/file/content.rb
+    lib/puppet/type/file/source.rb
+
+[requirements for extending the indirector is not obvious, and scarcely documented]
+[getting what it's about only possibly thanks to masterzen's blog]
+[after adding termini, got in trouble because of special handling of URLs by the indirector]
+[worked around by escaping URLs, sound solution not yet devised]
+[metadata must be initialized with empty fields]
+[passing hash to constructor triggers Ruby bug in 1.9.x]
+[inconsistencies among puppet agent vs. apply]
+[HTTPS won't Just Work becaust of trust issues]
+[mtime as a checksum is not well established, and factually not working (PUP-1208)]
+[minor: size cannot be used as extra-light checksum]
