@@ -1,10 +1,9 @@
-# Site settings
-title:       Pixyll
-email:       your_email@example.com
-author:      John Otander
-description: "A simple, beautiful theme for Jekyll that emphasizes content rather than aesthetic fluff."
+title:       Felix' tech blog
+email:
+author:      Felix Frank
+description: "A blog about open source development, with bits about life, the universe, and everything. But mostly open source."
 baseurl:     ""
-url:         "http://pixyll.com"
+url:         "http://ffrank.github.io"
 
 # Google analytics
 google_analytics:
@@ -19,11 +18,11 @@ show_post_footers:  false
 disqus_shortname:
 
 # Social icons
-show_social_icons: false
-github_username:
-stackoverflow_id:
-twitter_username:
-google_plus_id:
+show_social_icons: true
+github_username: ffrank
+stackoverflow_id: 3356612
+twitter_username: felis_rex
+google_plus_id: 111433443728862497850
 linkedin_username:
 bitcoin_url:
 paypal_url:
