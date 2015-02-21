@@ -1,11 +1,10 @@
 ---
 layout: post
 category: articles
-tags: fosdem cfgmgmtcamp conference log
+tags: fosdem cfgmgmtcamp conference log foss puppet
 ---
 
-A summary of the proceedings in Belgium at the start of February 2015, as experienced by your’s 
-truly. Read about FOSDEM, Config Management Camp and shenanigans with peers from all corners.
+A thoroughly biased summary and travel log of FOSDEM and Config Management Camp 2015.
 
 ### Getting to the conference
 
@@ -67,7 +66,7 @@ needed finishing before the day of my return. Of course, I still had the advanta
 jet-lagged at all; I live in Belgium’s timezone. Great respect to all guests who arrived from 
 America and even volunteered at the conference in various capacities.
 
-### The good, the bad and the smelly
+### Large spaces and small rooms
 
 [Oh, look, he’s finally going to write about FOSDEM. What do you know?] This was the first FOSDEM 
 I attended and expectations were quite high. I had received recommendations from several peers who 
@@ -127,7 +126,7 @@ Other notable impressions from FOSDEM:
 * met and chatted with [David Lutterkort](https://twitter.com/lutterkort)
 * the cafeteria serves no food whatsoever - bring your own, likely from the decentralized food court
 * note to self, do get at least one waffle next year - what’s wrong with you?
-* the Puppet stand was hosted by the illustrious Johan De Wit
+* the Puppet booth was hosted by the illustrious Johan De Wit
 * [Mitchell Hashimoto](https://twitter.com/mitchellh) could occasionally be found at the inofficial Puppet Labs cafeteria table
 * [Kara](https://twitter.com/feynudibranch), [Dawn](https://twitter.com/geekygirldawn) et al were absolutely rocking the configuration management room
 * getting into James’ talk was difficult but rewarding
@@ -158,8 +157,7 @@ Pieter's to check into our respective hotels and then meet up with Henrik et al 
 I was amazed to finally lay eyes on the breath-taking old town core, after having spent the entire 
 con last year near the station and college.
 
-![Ghent](https://cloud.githubusercontent.com/assets/436765/6260240/11b76b88-b7dc-11e4-9f78-81dac7984
-c84.jpg)
+![Ghent](https://cloud.githubusercontent.com/assets/436765/6260240/11b76b88-b7dc-11e4-9f78-81dac7984c84.jpg)
 
 Config Management Camp is smaller than FOSDEM by at least an order of magnitude. All attendees can 
 fit themselves into a large lobby for coffee and snacks. It's not unlike a large family reunion, 
@@ -174,6 +172,7 @@ The Puppet track was quite captivating again. Aside from Luke's traditional Q&A 
 boasted talks from various Puppet Labs employees such as Morgan and [Colleen](https://twitter.com/pdx_krinkle),
 as well as reknown 
 community members like [RI](https://twitter.com/ripienaar).
+
 I had resolved to not glue myself onto this track exclusively the way I had handled it
 last year, but the folks didn't make it easy. The more interesting Chef talks overlapped with 
 ones that I felt to be obligatory in Puppet. As a compromise, I did manage to catch some main track 
@@ -181,10 +180,10 @@ action, such as Gareth's wonderful presentation (or, as I felt, his sermon - dif
 in full depth, broad and encompassing, and leaving you with a sense that there is a greater scheme 
 of things).
 
-I cannot stress this enough - Config Management Camp is much denser with networking opportunities 
-than FOSDEM, with coordinated breaks, free catering, a semi-open bar at the first day's evening 
+I cannot stress this enough: Config Management Camp is much denser with networking opportunities 
+than FOSDEM, with coordinated breaks, free catering, a semi-open bar in the evening after the first day
 and a general atmosphere that is much more personal. Shout-out to the great Puppet Labs folks (and 
-Igor!) who took me out on Tuesday. Funniest night in quite a while - you know who you are.
+Igor!) who took me out on Tuesday - definitely among the best times in recent memory.
 
 ### Recurring themes
 
@@ -198,12 +197,13 @@ Well, this particular buzzword is not new at all. Still, and especially from an 
 perspective, there are certain aspects of the topic that bear repeating and ever further 
 exploration:
 
-the “do”s and “don’t”s of building cloud based platforms
-existing and emerging technologies to create and manage such platforms
-the wider view across the board, with fundamental considerations
+* the "do"s and "don't"s of building cloud based platforms
+* existing and emerging technologies to create and manage such platforms
+* the wider view across the board, with fundamental considerations
 
-These are exciting times for this industry. If you will, you can even see a shadow of Skynet 
-between the lines of some of the presentations…or this is just me growing silly/paranoid/ecstatic.
+These are exciting times for this industry. If you will, you can even see a shadow of
+[Skynet](http://tvtropes.org/pmwiki/pmwiki.php/Franchise/Terminator)
+between the lines of some of the presentations...or this is just me growing silly/paranoid/ecstatic.
 
 #### Testing
 
@@ -213,36 +213,39 @@ guess: Tools like Puppet allow us to express infrastructure in code. The tools a
 becoming more powerful, and the use cases grow in complexity. Operations teams are borrowing ever 
 more concepts and techniques from software development.
 
-As such, it is probably a natural progression to find continuous integration and delivery in the 
-context of configuration management as well. Testing solutions have certainly risen on my list of 
+As such, it is probably a natural progression to witness continuous integration and delivery in the 
+context of configuration management increasingly often. Testing has certainly risen on my list of 
 priorities for this year.
 
 #### Diversity, the lack thereof
 
-There were some loud meta-discussions going on behind the scenes of the event. From what I 
+There was some loud meta-discussion going on behind the scenes of the event. From what I 
 gathered, things were sparked by the missing code of conduct at FOSDEM. Apparently, the team behind 
 the event had been pleased so far that the con was universally enjoyable without any written codex. 
-A feminist (read: judicious) block of attendees now demanded a reality check. Sure, everyone you 
+A feminist (read: judicious) block of attendees now demanded a reality check.
+
+Well sure, everyone you 
 meet at FOSS events is nice and cordial. Why would it be necessary to put forth any express rules 
 for what is common sense?
-
 Well, news flash: Sexism is not a phenomenon that is limited to the jocks at the next sports bar. 
-Harassment is not monopolized by the socially disadvantaged. The FOSDEM staff acknowledged the 
+Harassment is not monopolized by the socially disadvantaged.
+
+The FOSDEM staff acknowledged the 
 criticism, and created the first code of conduct in the history of the conference. Config 
-Management Camp received a codex as well, as was deemed appropriate in the light of the discussions 
-surrounding FOSDEM.
+Management Camp received a codex as well. I assume this was deemed appropriate in the light of the discussions 
+surrounding FOSDEM. And I agree.
 
 Discussing sexism and ruthless conduct as an obstacle for diversity, of both race and gender, is 
 especially important with regard to the state of the industry, and the business world at large. 
-It’s manifest in the conference crowd itself: there is a large slew of white dudes. Caucasian 
+This state is manifest in the conference crowd itself: it's a large slew of white dudes. Caucasian 
 males are absolutely dominating the audience of any FOSDEM talk. (There was some additional flak 
-because the line of speakers was similarly monotone.) The percentage of female attendees was even 
+because the line of speakers was similarly monotone.)
+
+The percentage of female attendees was even 
 relatively impressive, somewhere above 10%. Yes, the fact that this feels like a lot is another 
 symptom of the problem.
 
-![Representative 
-tweet](https://cloud.githubusercontent.com/assets/436765/6221300/1e0c2bf8-b642-11e4-89f6-6b325eb390a
-5.png)
+![Representative tweet](https://cloud.githubusercontent.com/assets/436765/6221300/1e0c2bf8-b642-11e4-89f6-6b325eb390a5.png)
 
 In Ghent, the ratios were more “usual”, with very few women milling among the crowd. As for 
 racial diversity, that was insignificant at both conferences, despite their international nature.
@@ -260,34 +263,38 @@ source development. And needless to say, women make up about 50% of most societi
 sense whatsoever that this is not reflected by the open source crowd. IT should not be a male 
 domain.
 
-In a broader scope, there might be career choices that can be sensibly dominated by men (I’m not 
-disclosing which one’s I have in mind), but again - computer science and engineering are 
+In a broader scope, there might be other fields of work that can be sensibly dominated by men (I'm not 
+disclosing which one's I have in mind), but again: computer science and engineering are 
 definitely not among them.
 
 So why is our open source community such a monoculture? This question bears considering. Have you 
 ever stopped to do just that? Jez Humble put it wonderfully in his amazing keynote in Ghent: This 
-is a problem that we are facing, and it won’t do to wait for the women to solve it. We have to 
+is a problem that we are facing, and it won't do to wait for the women to solve it. We have to 
 get on that.
 
-To add my own to cents: we are guys are currently the backbone of the movement, like it or not. The 
-issue was created by men and it is being perpetuated by them. It would be rather impudent to expect 
+To add my own to cents: us guys are currently the backbone of the movement, like it or not. The 
+issue was created by men and it is being perpetuated by men. It would be rather impudent to expect 
 others to clean up after us.
 
 #### Speaking of sexism
 
-The very end of the trip was a real doozy. Brussels airport boasts some large screens near the 
-security check that explain the procedure to travellers waiting in line. It uses a short animated 
-film to demonstrate. It features a hulking security guard and two travelers. The first is a man 
+The very end of the trip was a real doozy. Brussels airport boasts some large screens near
+security control that explain the procedure to travellers waiting in line. It uses a short animated 
+film to demonstrate, featuring a hulking security guard and two travelers. The first is a man 
 around 30, wearing business casual. His belongings mainly comprise a laptop computer and his 
 wallet. He indicates to the gruff looking guard that he is not carrying anything else and proceeds 
 through the metal detector.
 
 Enter the female traveler. She is about the same age as the man, wearing a short skirt and hot pink 
-jacket. Her suitcase is the same pink, as is her purse. She upends the latter to reveal a lipstick, 
-some other small items and some coins. As she moves towards the detector, she smiles flirtatiously 
+jacket. Her suitcase is pink as well, as is her purse. She upends the latter to reveal a lipstick, 
+some other small items and some coins. Her luggage includes skincare products.
+As she moves towards the detector, she smiles flirtatiously 
 at the huge security man, who awkwardly smiles back.
 
-Seriously Brussels airport, what’s wrong with you?
+Seriously Brussels airport, what's wrong with you?
+
+**Edit** hey, what do you know - you can watch the whole piece on
+[YouTube](https://www.youtube.com/watch?v=lP5eZwcn1PY).
 
 ### Closing thoughts
 
@@ -296,20 +303,21 @@ my expectations once more, it was such a great time. I saw many new things in be
 caught up with amazing people that I got to know a year ago. One simple insight that I gained: A 
 conference is more fun the more people you already know.
 
-It’s probably that last bit that lead to FOSDEM not quite living up to my expectations. Veterans 
+It's probably that last bit that lead to FOSDEM not quite living up to my expectations. Veterans 
 had recommended it so highly, I had probably imagined even more of the magic that happens in Ghent. 
 Also, I was not really prepared for the sheer dimensions of it all. And still, there were definite 
 highs such as the aforementioned AMA session and cafeteria chats.
 
 I had been wondering why a number of my peers had vocally rejected the proceedings of FOSDEM and 
 would attend Config Management Camp exclusively, even though Brussels is conveniently close by. In 
-hindsight, it’s not that astounding. Leaving Friday night is quite strenuous, you loose the 
+hindsight, it's not that astounding. Leaving Friday night is quite strenuous, you loose the 
 weekend, and getting into talks can be difficult or impossible. The crowd is more anonymous and 
 dispersed.
 
 There will most definitely be yet another trip to Belgium next winter, though some deliberation 
-will be required as to whether FOSDEM will be in my schedule once more. But I will try to be in 
-time and make the CFP for Config Management Camp again - cons with a presentation are the best, 
-after all. But all that aside, I’m already looking forward to meeting all my FOSS peers again.
+will be required as to whether FOSDEM will be on my schedule then. But I will definitely try to be in 
+time and make the CFP for Config Management Camp again, which I missed this time around
+- cons with a presentation are the best, after all.
+But all that aside, I'm already looking forward to meeting all my FOSS peers again.
 
 You folks are the best.
