@@ -1,6 +1,6 @@
 ---
 layout: post
-category: bugs
+category: misc
 tags: puppet master http ssl loadbalancing
 ---
 
