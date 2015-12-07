@@ -4,10 +4,13 @@ permalink: /puppet-essentials/index.html
 title: Book announcement - Puppet Essentials
 category: misc
 tags: [book, plugs]
-modified: 25-12-2014
+modified: 07-12-2015
 ---
 
 A short description of my book debut, Puppet Essentials, available from Packt Publishing.
+
+**Update:** I worked on a new edition called
+[Puppet 4 Essentials - Second Edition](/puppet-4-essentials/index.html)
 
 ## Yet another beginners' guide for Puppet
 
