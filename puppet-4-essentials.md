@@ -11,7 +11,7 @@ A short introduction to my second book project, Puppet 4 Essentials - Second Edi
 
 ## The next generation
 
-![Puppet 4 Essentials Cover](https://d1ldz4te4covpm.cloudfront.net/sites/default/files/imagecache/ppv4_main_book_cover/B04980_MockupCover_Normal.jpg)
+![Puppet 4 Essentials Cover](https://d1ldz4te4covpm.cloudfront.net/sites/default/files/imagecache/ppv4_main_book_cover/1107OS_4980_Puppet%20Essentials%20Second%20Edition.jpg)
 
 This book is very similar to [Puppet Essentials](/puppet-essentials/index.html) (its first edition)
 but worth your while for the following reasons:
