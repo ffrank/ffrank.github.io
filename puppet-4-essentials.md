@@ -30,7 +30,7 @@ No collection of Puppet Essentials titles is complete without this work ;o)
 ## Now what
 
 Well, you know the drill.
-[Order your copy](https://www.packtpub.com/networking-and-servers/puppet-essentials-second-edition), knock yourself out.
+[Order your copy](https://www.packtpub.com/networking-and-servers/puppet-4-essentials-second-edition), knock yourself out.
 If you do, [let me know](https://twitter.com/felis_rex) what you think!
 
 And hey - thanks!
