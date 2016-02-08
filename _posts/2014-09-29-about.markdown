@@ -1,7 +1,0 @@
----
-layout: post
-category: misc
-tags: about
-excerpt: <p>A small permalinked page about this blog at large, myself and whatever a reader might want to know.</p>
----
-
