@@ -1,12 +1,9 @@
 ---
 layout: post
 category: misc
-tags: puppet master http ssl loadbalancing
+tags: [ puppet, master, http, ssl, loadbalancing ]
+summary: Brief explanation of load balancing approaches with a discussion of applicability to the Puppet master - debunking my own ad hoc ramblings.
 ---
-
-Brief explanation of load balancing approaches
-with a discussion of applicability to the Puppet
-master - debunking my own ad hoc ramblings.
 
 ### Background
 

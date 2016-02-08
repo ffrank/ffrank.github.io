@@ -1,7 +1,8 @@
 ---
 layout: post
 category: bugs
-tags: puppet bugs ssh keys purging
+tags: [ puppet, bugs, ssh, keys, purging ]
+summary: On the clashing of generated resource titles, and how to deal.
 ---
 
 Puppet got in trouble when users manually created resources that had no description.

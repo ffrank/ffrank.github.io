@@ -2,9 +2,8 @@
 layout: post
 category: bugs
 tags: [puppet, bugs, git, rebase, bisect, testing]
+summary: Another tale of history bisection in the search for the root of today's problems.
 ---
-
-Another tale of history bisection in the search for the root of today's problems.
 
 Finding out why Travis fails your latest PR - *2 minutes*. Reproducing locally
 and figuring out how to fix the issue - *3 hours*. Squashing and rebasing to

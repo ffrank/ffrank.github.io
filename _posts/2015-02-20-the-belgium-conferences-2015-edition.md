@@ -1,10 +1,9 @@
 ---
 layout: post
 category: articles
-tags: fosdem cfgmgmtcamp conference log foss puppet
+tags: [ fosdem, cfgmgmtcamp, conference, log, foss, puppet ]
+summary: A thoroughly biased summary and travel log of FOSDEM and Config Management Camp 2015.
 ---
-
-A thoroughly biased summary and travel log of FOSDEM and Config Management Camp 2015.
 
 ### Getting to the conference
 

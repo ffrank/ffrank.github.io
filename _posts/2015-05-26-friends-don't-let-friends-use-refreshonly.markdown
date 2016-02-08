@@ -1,10 +1,9 @@
 ---
 layout: post
 category: misc
-tags: puppet exec parameter dependencies
+tags: [ puppet, exec, parameter, dependencies ]
+summary: An overview of the (ab-)uses for the refreshonly parameter to Puppet's exec type.
 ---
-
-An overview of the (ab-)uses for the `refreshonly` parameter to Puppet's `exec` type.
 
 #### Manifest imperfection
 

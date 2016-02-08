@@ -1,11 +1,9 @@
 ---
 layout: post
 category: articles
-tags: puppet bugs features code
+tags: [ puppet, bugs, features, code ]
+summary: An account of the creation of yet another long awaited feature. First part of two.
 ---
-
-An account of the creation of yet another long awaited feature.
-First part of two.
 
 ### Overview
 

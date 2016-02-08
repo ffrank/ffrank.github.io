@@ -2,9 +2,8 @@
 layout: post
 category: features
 tags: [ puppet, http, proxy, ssl, security ]
+summary: A non-exhaustive summary and outlook on Puppet's HTTP client capabilities.
 ---
-
-A non-exhaustive summary and outlook on Puppet's HTTP client capabilities.
 
 ### Making HTTP requests from within Puppet
 

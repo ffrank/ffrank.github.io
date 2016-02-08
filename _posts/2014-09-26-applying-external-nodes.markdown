@@ -1,10 +1,10 @@
 ---
 layout: post
 category: bugs
-tags: puppet bug apply environments
+tags: [ puppet, bug, apply, environments ]
+summary: Learning environment basics, with a bold venture into the brave new world of directory environments.
 ---
 
-Learning environment basics, with a bold venture into the brave new world of directory environments.
 
 ### Sudden breakage of puppet apply for some users
 

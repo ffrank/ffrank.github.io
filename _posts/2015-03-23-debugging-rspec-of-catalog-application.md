@@ -1,7 +1,8 @@
 ---
 layout: post
 category: tips
-tags: puppet rspec catalog logs debug
+tags: [ puppet, rspec, catalog, logs, debug ]
+summary: A simple trick for rspec debugging.
 ---
 
 Running catalogs from RSpec tests is tricky. There are some examples

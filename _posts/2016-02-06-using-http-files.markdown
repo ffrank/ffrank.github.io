@@ -2,9 +2,8 @@
 layout: post
 category: features
 tags: [ puppet, http, proxy, ssl, security, file, metadata, md5, checksum, mtime ]
+summary: A quick guide to make the most of HTTP file sources in Puppet.
 ---
-
-A quick guide to make the most of HTTP file sources in Puppet.
 
 ### Overview
 

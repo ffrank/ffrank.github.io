@@ -1,10 +1,9 @@
 ---
 layout: post
 category: articles
-tags: conference log foss openstack
+tags: [ conference, log, foss, openstack ]
+summary: A quick review of the first annual OpenStack DACH Day Berlin.
 ---
-
-A quick review of the first annual OpenStack DACH Day Berlin.
 
 ### Some history
 

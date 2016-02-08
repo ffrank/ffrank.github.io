@@ -1,7 +1,8 @@
 ---
 layout: post
 category: features
-tags: puppet file http indirector
+tags: [ puppet, file, http, indirector ]
+summary: Moving towards HTTP support in Puppet's file resource type.
 ---
 
 Many users (myself included) would like to specify `source => http://...`
