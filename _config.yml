@@ -29,10 +29,10 @@ paypal_url:
 flattr_button:
 
 # Build settings
-markdown:     redcarpet
-redcarpet:
-  extensions: ['smart', 'tables', 'with_toc_data']
+markdown:     kramdown
 permalink:    pretty
+gems:
+  - jekyll-paginate
 paginate:     3
 sass:
   compressed: true
