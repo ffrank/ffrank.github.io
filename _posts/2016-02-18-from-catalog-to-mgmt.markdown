@@ -37,7 +37,7 @@ exec { 'demo-process':
 
 It gets compiled into the following catalog:
 
-```
+```json
 $ puppet master --compile demo.example.net --manifest /tmp/demo.pp
 Notice: Compiled catalog for demo.example.net in environment production in 0.21 seconds
 {
@@ -127,7 +127,7 @@ Notice: Compiled catalog for demo.example.net in environment production in 0.21 
 Write this in YAML, and it almost looks like a graph fit for use with `mgmt`.
 Here's an example of those:
 
-```YAML
+```yaml
 ---
 graph: mygraph
 types:
@@ -217,25 +217,25 @@ puzzled for a minute.
 
 Take another look at the edges in the output of `puppet master --compile`:
 
-```YAML
-  "edges": [
-    {
-      "source": "Stage[main]",
-      "target": "Class[Settings]"
-    },
-    {
-      "source": "Stage[main]",
-      "target": "Class[main]"
-    },
-    {
-      "source": "Class[main]",
-      "target": "File[demo-file]"
-    },
-    {
-      "source": "Class[main]",
-      "target": "Exec[demo-process]"
-    }
-  ],
+```json
+"edges": [
+  {
+    "source": "Stage[main]",
+    "target": "Class[Settings]"
+  },
+  {
+    "source": "Stage[main]",
+    "target": "Class[main]"
+  },
+  {
+    "source": "Class[main]",
+    "target": "File[demo-file]"
+  },
+  {
+    "source": "Class[main]",
+    "target": "Exec[demo-process]"
+  }
+],
 ```
 
 It's an array, nice and easy. It does reference both resources from the manifest.
@@ -399,7 +399,7 @@ me to save the intermediate step of serializing to JSON. And sure enough,
 the heart of the [puppet master](https://github.com/puppetlabs/puppet/blob/e945d75e6843de39304804bc57fe089c34e3af12/lib/puppet/application/master.rb#L171-L175)
 code basically consists of just one call to the indirector:
 
-```Ruby
+```ruby
 catalog = Puppet::Resource::Catalog.indirection.find(options[:node])
 ```
 
@@ -451,7 +451,7 @@ The code that does it all turned out quite ugly. In fact, I won't even
 link to it here. More on that choice later. Let's just dissect it right now.
 The heart of it is the following method:
 
-```Ruby
+```ruby
 def translate_catalog(catalog)
   result = {
     :graph => catalog.name,
@@ -482,7 +482,7 @@ to work with.
 The real work happens in the two truncated loops, one for the resources and
 one for the edges. Here is the first one:
 
-```Ruby
+```ruby
 catalog.resources.select { |res|
   case res
   when Puppet::Type::Component
@@ -506,7 +506,7 @@ that are neither `component` (like a class) nor `stage`. It applies
 the appropriate conversion methods `to_resource` and `to_data_hash`,
 and finally invokes a custom method `mgmt_type`.
 
-```Ruby
+```ruby
 def mgmt_type(resource)
   result = {}
   resource["parameters"] ||= {} # resource w/o parameters
@@ -543,7 +543,7 @@ The only edges that are supposed to make it into the `mgmt`
 graph are those that connect supported resources. Here's how
 this is currently implemented:
 
-```Ruby
+```ruby
 catalog.relationship_graph.edges.map(&:to_data_hash).each do |edge|
   from = parse_ref(edge["source"])
   to = parse_ref(edge["target"])
@@ -558,7 +558,7 @@ end
 
 Again, the actual work is performed by a custom method.
 
-```Ruby
+```ruby
 def parse_ref(ref)
   if ! ref.match /^(.*)\[(.*)\]$/
     raise "unexpected reference format '#{ref}'"
@@ -579,7 +579,7 @@ makes sure to avoid all containment edges and other overhead.
 Without further ado, this is the `mgmt` compatible graph produced by the
 proof-of-concept code:
 
-```YAML
+```yaml
 $ bundle exec puppet mgmtgraph --manifest /tmp/demo.pp 
 ---
 graph: fflaptop.local
