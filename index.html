@@ -19,7 +19,7 @@ layout: default
       <div class="post">
         <a href="{{ post.url | prepend: site.baseurl }}" class="post-link">
           <p class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</p>
-          <h3 class="h2 post-title">{{ post.title }}</h3>
+	  <h3 class="h4 post-title"><span style="font-weight: normal">Post: </span>{{ post.title }}</h3>
           <p class="post-summary">{% if post.summary %}{{ post.summary }}{% else %}{{ post.content | strip_html | strip_newlines | truncate: 120 }}{% endif %}</p>
         </a>
       </div>
