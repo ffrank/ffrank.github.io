@@ -2,6 +2,7 @@
 layout: default
 ---
 
+<!-- twitter card material -->
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="ffrank">
 <meta name="twitter:creator" content="@felis_rex">
@@ -15,10 +16,12 @@ layout: default
 {% endif %}
 {% if page.description %}
   <meta name="twitter:description" content="{{ page.description }}">
+{% elsif page.summary %}
+  <meta name="twitter:description" content="{{ page.summary }}">
 {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
 {% endif %}
-<meta name="twitter:image:src" content="https://pbs.twimg.com/profile_images/546806415822553088/JOt0l6pb_bigger.jpeg">
+  <meta name="twitter:image:src" content="https://pbs.twimg.com/profile_images/546806415822553088/JOt0l6pb_bigger.jpeg">
 
 {% assign minutes = content | number_of_words | divided_by: 180 %}
 {% if minutes == 0 %}
