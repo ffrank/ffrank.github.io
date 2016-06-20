@@ -5,7 +5,7 @@ tags: [ puppet, catalog, compiler, mgmt, graph ]
 summary: An quick overview of what mgmt can do with Puppet by now.
 ---
 
-[Recently](/features/2016/06/12/puppet,-meet-mgmt.html), I wrote a veritable deep-dive
+[Recently](/features/2016/06/12/puppet,-meet-mgmt/), I wrote a veritable deep-dive
 on `mgmt`'s new Puppet integration code, but didn't include a good overview of how
 the new features look in practice. Here we go.
 
