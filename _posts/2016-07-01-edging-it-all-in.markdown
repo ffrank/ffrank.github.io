@@ -6,7 +6,7 @@ summary: Of relationships between Puppet's classes and defines, and their transl
 ---
 
 The `mgmt` translator for `puppet` catalogs was truly created from the bottom
-up. We started with some resource types, and picking up the relationship between
+up. We started with some resource types, and picking up the relationships between
 any resources that got translated. This falls short for many catalogs, of course,
 because dependencies must often put whole classes in order.
 
@@ -167,42 +167,210 @@ let's get a proper rendering of the whole graph:
  ["Notify[This is the only resource]", "Whit[Completed_class[Main]]"]]
 ```
 
-[some final analysis]
+The naming scheme for the `whit` resources is simple: There is an `admissible`
+marker and its counterpart, called `completed`. This ordered pair encloses each
+container (stages, classes, and defined types, the latter not being depicted above).
+The names are not that important either. Read on to learn how this allows us
+to translate the complete set of relationships for `mgmt`.
 
 ### Holding on to the edge
 
-[idea to rely on mgmt's noop resource had been there from the start]
+To model class containment and dependencies in `mgmt`, we already had an idea
+floating around. It was [back in February](https://github.com/purpleidea/mgmt/issues/8#issuecomment-184866939),
+actually, right when we started thinking about the translator concept,
+that we came up with it.
+The rough plan was to introduce proxy nodes that do nothing (type `noop`) and just help
+distributing the relationships.
 
-[tricky part was supposedly to generate appropriate place-holders]
+What I now learned was that Puppet does just that already, using `whit` pseudo-resources.
+Incorporating them in the output graph is simple: Each `whit` can be translated right
+into a `noop`. As soon as this happens, relationships between `whit`s and other resources
+are kept as well.
 
-[the whits make it simple though: just translate them to noop]
+Since these `whit` pseudo-resources don't show up in the catalog's resource table, the
+resource translation code needed to change. The original loop:
 
-[whits don't appear in catalog.resources -> use relationship graph vertices instead]
+```ruby
+catalog.resources.each do |res|
+  ...
+end
+```
 
-[these changes suffice to cover all needed relationships]
+It now just uses the full graph:
 
-[observe the greater graph complexity]
+```ruby
+catalog.relationship_graph.vertices.each do |res|
+  ...
+end
+```
 
-[not a problem at all - graphs are not supposed to be edited]
+Accepting the `whit` nodes was implemented in
+[translator DSL](https://github.com/ffrank/puppet-mgmtgraph/blob/master/lib/puppetx/catalog_translation/type/whit.rb).
+
+Furthermore, the handling of edges needed to change. Earlier, the symbolic edge representation
+was used, as generated through the `Edge#to_data_hash` method. It returns source and target
+in the form of resource references such as `Class[config]` or `Stage[main]`.
+
+To get at the actual `whit` node edges, the code now foregoes the `to_data_hash` method, and instead
+retrieves type and title from the actual respective resource object. Apart from this detail, everything
+still works the same as before.
+
+These relatively minor changes were all that was necessary to enable translation of all resource
+dependencies that make up the complete Puppet graph. An implication of this change is that the resulting
+graph receives a certain amount of boilerplate relationships. Here is a very simple graph from
+a short manifest:
+
+```yaml
+$ bundle exec puppet mgmtgraph print --code 'file { "/etc/nologin": }'
+---
+graph: fflaptop.local
+comment: generated from puppet catalog for fflaptop.local
+resources:
+  file:
+  - name: "/etc/nologin"
+    path: "/etc/nologin"
+    content: 
+edges: []
+```
+
+Now that the implicit `Class[main]`, the `main` run stage and other internals are recognized,
+the result looks as follows:
+
+```yaml
+---
+graph: fflaptop.local
+comment: generated from puppet catalog for fflaptop.local
+resources:
+  file:
+  - name: "/etc/nologin"
+    path: "/etc/nologin"
+    content: 
+  noop:
+  - name: admissible_Stage[main]
+  - name: completed_Stage[main]
+  - name: admissible_Class[Settings]
+  - name: completed_Class[Settings]
+  - name: admissible_Class[Main]
+  - name: completed_Class[Main]
+edges:
+- name: Whit[Admissible_class[Main]] -> File[/etc/nologin]
+  from:
+    kind: noop
+    name: admissible_Class[Main]
+  to:
+    kind: file
+    name: "/etc/nologin"
+- name: Whit[Completed_class[Settings]] -> Whit[Completed_stage[main]]
+  from:
+    kind: noop
+    name: completed_Class[Settings]
+  to:
+    kind: noop
+    name: completed_Stage[main]
+- name: Whit[Completed_class[Main]] -> Whit[Completed_stage[main]]
+  from:
+    kind: noop
+    name: completed_Class[Main]
+  to:
+    kind: noop
+    name: completed_Stage[main]
+- name: Whit[Admissible_stage[main]] -> Whit[Admissible_class[Settings]]
+  from:
+    kind: noop
+    name: admissible_Stage[main]
+  to:
+    kind: noop
+    name: admissible_Class[Settings]
+- name: Whit[Admissible_class[Settings]] -> Whit[Completed_class[Settings]]
+  from:
+    kind: noop
+    name: admissible_Class[Settings]
+  to:
+    kind: noop
+    name: completed_Class[Settings]
+- name: Whit[Admissible_stage[main]] -> Whit[Admissible_class[Main]]
+  from:
+    kind: noop
+    name: admissible_Stage[main]
+  to:
+    kind: noop
+    name: admissible_Class[Main]
+- name: File[/etc/nologin] -> Whit[Completed_class[Main]]
+  from:
+    kind: file
+    name: "/etc/nologin"
+  to:
+    kind: noop
+    name: completed_Class[Main]
+```
+
+I actually entertained the thought of filtering some of these, but this would require
+an inacceptable amount of added code complexity. After all, this generated YAML is for
+running through `mgmt`, and not for casual editing after the fact. As described
+[earlier]({% post_url 2016-06-19-puppet-powered-mgmt %}), the Puppet translator is now
+a first class citizen of `mgmt`, so that the YAML does not even need to be saved.
+
+Of course, the translation can never be perfect, so you may have need to alter the
+YAML data after all. If this occurs, you should probably write a scriptlet in the language of
+your choice (that has YAML support). This way, the confusingly similar edge and node
+names of all the `noop` vertices don't get in the way.
 
 ### Almost there
 
-[amazing: can now write complex manifests with modules etc.]
+This latest bit of progress is actually quite amazing: We are still limited by the
+resource types that `mgmt` supports already, but otherwise, you are now free to
+write manifests and modules for use with `mgmt`, and they should Just Work!
 
-[unsupported resources still get dropped, along with transitive relationships (example!)]
+The fact that unsupported resources (and their edges) still get dropped can be
+important. Consider the following contrived manifest:
 
-[as soon as these are incorporated, arbitrary manifests should translate completely]
+```puppet
+files { "/tmp/a": }
+->
+notify { "Half time!": }
+->
+files { "/tmp/b": }
+```
 
-[exports would be nice, but not needed]
+The `notify` resources cannot be translated, so it's missing in the output graph.
+So are both relationship edges that connect to it. Hence, the translated graph will
+regard the `file` resources as unrelated (`mgmt` will actually process them in parallel).
+This is very bad, but not an issue that will be addressed directly. Instead, we will
+focus on retaining all Puppet resources in one form or another.
+
+As soon as this works, it should be possible to run almost arbitrary manifests through `mgmt`,
+along with Forge modules and everything. There will always be limitations, but here's hoping
+that this facility will enable a lot of people to start playing with the `mgmt` project.
+
+Another interesting commonality among `puppet` and `mgmt` is the concept of exported resources.
+It remains to be seen whether a proper translation of those is possible at all.
+It would be nice to have, so that this `mgmt` feature also comes available through `puppet` manifests.
+However, if this will not work after all, I don't expect to loose any sleep over it.
 
 ## Limiting the scope
 
-[after all, puppet language support is only a stop-gap]
+After all, support for `puppet` manifests in `mgmt` is only a stop-gap feature until a
+suitable native language can be devised and implemented. I can name a few reasons why
+Puppet cannot permanently serve as the code interpreter:
 
-[there is no feature parity, and it's probably not worth teaching missing parameters to puppet]
+1. There is never going to be full feature parity. Some of Puppet's types are very rich. A `file` resource
+can take up to 32 attributes, not counting metaparameters. On the other side of this coin,
+`mgmt` introduces some properties that only make sense under its event-based paradigm, such
+as the `exec` type's `watchcmd`. This could be worked around by creating artificial Puppet types
+that are very similar to the ones in `mgmt`, but that would be missing the point (which is
+take advantage of all the smart engineering that has gone into Puppet's type system throughout
+the years).
+2. The `puppet` compiler can only ever generate a graph for the specific agent that invoked it.
+The catalog it emits, and the finished graph that is translated from it, will usually be tailored
+to the fact values that this agent supplies. Basing the configuration of a whole cluster on such
+a graph does not appear feasible.
+3. Puppet's language may just be the most sophisticated one on the configuration management scene.
+It was designed with a great deal of deliberation for a sole purpose: To model systems in a suitable
+way for management through `puppet agents`. It makes some assumptions that just don't hold true
+for `mgmt`, such as the transactional evaluation of the resource graph.
+4. On the flip side, `mgmt` has some unique requirements that stem from its event-based nature.
+A suitable language should probably be reactive, or have some other properties that help the
+user take maximum advantage of the tool.
 
-[more importantly, puppet's language was designed specifically for puppet]
-
-[mgmt probably needs a language that captures its reactive nature]
-
-[still: hope is that the puppet support will enable many people to start testing]
+Still, while there is no DSL for `mgmt` yet, I hope that the `puppet` support will make `mgmt`
+more accessible for many potential users, and thereby help its development.
