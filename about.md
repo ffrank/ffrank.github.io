@@ -29,7 +29,7 @@ He also sometimes uses the third person to refer to himself for some reason.
 #### Presences
 
  * [Github](https://github.com/ffrank) obviously
- * Twitter [@felis\_rex](https://twitter.com/felis\_rex)
+ * Twitter [@felis_rex](https://twitter.com/felis_rex)
  * Stack Exchange
  
 ![Flair!](http://stackexchange.com/users/flair/4087734.png?theme=clean)
