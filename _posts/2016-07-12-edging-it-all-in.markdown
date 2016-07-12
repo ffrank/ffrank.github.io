@@ -395,3 +395,14 @@ user take maximum advantage of the tool.
 
 Still, while there is no DSL for `mgmt` yet, I hope that the `puppet` support will make `mgmt`
 more accessible for many potential users, and thereby help its development.
+
+Would you like to be a part of this? Please feel free to get involved to any extent:
+
+* install and try the [puppet-mgmtgraph](https://forge.puppet.com/ffrank/mgmtgraph/readme) module
+* read up on `mgmt` at [James' blog](https://ttboj.wordpress.com/tag/mgmt/)
+* download and try [mgmt](https://github.com/purpleidea/mgmt/)
+* let James know what you think, you can find him on IRC in `#mgmtconfig` on FreeNode
+* holler us on Twitter
+* send feature request or even patches for either tool, if you're so inclined
+
+Thanks for reading!
