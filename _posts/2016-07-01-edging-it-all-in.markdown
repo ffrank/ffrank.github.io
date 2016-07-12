@@ -6,8 +6,8 @@ summary: Of relationships between Puppet's classes and defines, and their transl
 ---
 
 The `mgmt` translator for `puppet` catalogs was truly created from the bottom
-up. We started with some resource types, and picking up the relationships between
-any resources that got translated. This falls short for many catalogs, of course,
+up. We started with a few resource types, and the relationships between
+the translated resources. This falls short for many catalogs, of course,
 because dependencies must often put whole classes in order.
 
 Allowing the [translator module]({% post_url 2016-06-19-puppet-powered-mgmt %})
@@ -20,10 +20,13 @@ what happened so far.
 When I first wrote about [mgmt integration with Puppet]({% post_url 2016-02-18-from-catalog-to-mgmt %}),
 I already showed my approach to analyzing the catalog.
 It's really what anybody should do when looking at the details of a Ruby
-code base: Fire up `pry` and walk right into the objects in question.
+code base: Fire up `pry` and step right *into* the objects in question.
+Doing this allows you to take a close look at (in this case) the catalog data, but it
+cannot always answer all questions.
+
 The first surprise was the absence of relationship edges in the graph
 data structure. These edges emerge from the `prioritizer`, upon invoking
-the `relationship_graph` method.
+the catalog's `relationship_graph` method.
 
 To look at the kind of catalog object we need, add a call to `pry` in the
 `PuppetX::CatalogTranslation::to_mgmt` method:
@@ -90,9 +93,11 @@ Here, an `ls` will reveal that there are helpful methods such as `edges` and
 Quite a lot of edges. The original translator implementation ignored all class
 dependencies, so all of the above were considered to be overhead.
 The `notify` resource has no explicit relationships, and these implicit ones
-(with the containing class) were to be ignored as well.
+(with the containing class) were ignored as well.
 
-Now that class dependencies were actually wanted, it was necessary to
+![Visual graph](https://googledrive.com/host/0B15cMf9TSVMzY25Yb01EYmlmak0/class-relationships.svg)
+
+Now that class dependencies are actually wanted, it becomes necessary to
 arrive at a better understanding of this structure. At first glance,
 it's quite confusing. Some edges appear redundant, and there are
 circles, even tight one such as this:
@@ -100,6 +105,12 @@ circles, even tight one such as this:
 ```
 { Class[Main] => Stage[main] },
 { Stage[main] => Class[Main] },
+```
+
+or even this:
+
+```
+{ Class[Settings] => Class[Settings] },
 ```
 
 Fortunately, `pry` made it easy to pierce this particular mystery as well.
@@ -130,7 +141,7 @@ Puppet::Relationship#methods:
 ```
 
 So the edge's `source` and `target` are available through attribute accessors.
-Let's `cd` right in there as well:
+You can `cd` right into the source vertex, for example:
 
 ```
 [7] pry(#<Puppet::Relationship>):3> cd source
@@ -139,7 +150,9 @@ Let's `cd` right in there as well:
 
 Note the `pry` prompt. You just changed into the scope of a `Puppet::Type::Whit` object.
 In other words, the source of this edge (presented as `Class[Settings]`) is really
-a resource of Puppet's `whit` type. Now if you've never heard of this type, don't worry:
+a resource of Puppet's `whit` type.
+
+Now, if you've never heard of this type, don't worry:
 This is by design. It is only used internally, and not for use in manifest code.
 See [its source code](https://github.com/puppetlabs/puppet/blob/8615d23104a34923c05e6ddf777d98498d1fc924/lib/puppet/type/whit.rb)
 for more information. The documentation is enlightening and, as it happens, quite funny.
@@ -167,6 +180,8 @@ let's get a proper rendering of the whole graph:
  ["Notify[This is the only resource]", "Whit[Completed_class[Main]]"]]
 ```
 
+![Visual graph](https://googledrive.com/host/0B15cMf9TSVMzY25Yb01EYmlmak0/whit-relationships.svg)
+
 The naming scheme for the `whit` resources is simple: There is an `admissible`
 marker and its counterpart, called `completed`. This ordered pair encloses each
 container (stages, classes, and defined types, the latter not being depicted above).
@@ -188,7 +203,7 @@ into a `noop`. As soon as this happens, relationships between `whit`s and other 
 are kept as well.
 
 Since these `whit` pseudo-resources don't show up in the catalog's resource table, the
-resource translation code needed to change. The original loop:
+resource translation code needed to change. This was the original loop:
 
 ```ruby
 catalog.resources.each do |res|
@@ -209,7 +224,7 @@ Accepting the `whit` nodes was implemented in
 
 Furthermore, the handling of edges needed to change. Earlier, the symbolic edge representation
 was used, as generated through the `Edge#to_data_hash` method. It returns source and target
-in the form of resource references such as `Class[config]` or `Stage[main]`.
+in the form of resource references such as `Class[Settings]` or `Stage[main]`.
 
 To get at the actual `whit` node edges, the code now foregoes the `to_data_hash` method, and instead
 retrieves type and title from the actual respective resource object. Apart from this detail, everything
@@ -218,7 +233,7 @@ still works the same as before.
 These relatively minor changes were all that was necessary to enable translation of all resource
 dependencies that make up the complete Puppet graph. An implication of this change is that the resulting
 graph receives a certain amount of boilerplate relationships. Here is a very simple graph from
-a short manifest:
+a short manifest, the way it looked before `whit` support was added:
 
 ```yaml
 $ bundle exec puppet mgmtgraph print --code 'file { "/etc/nologin": }'
@@ -304,7 +319,11 @@ edges:
     name: completed_Class[Main]
 ```
 
-I actually entertained the thought of filtering some of these, but this would require
+> Note that this example uses a `file` resource rather than a `notify`. The reason is simple:
+There is no translation for `notify` yet, so the simple graph would have been fairly empty,
+and the new one would be all `noop` vertices.
+
+I actually entertained the thought of filtering some of these default classes and the stage, but this would require
 an inacceptable amount of added code complexity. After all, this generated YAML is for
 running through `mgmt`, and not for casual editing after the fact. As described
 [earlier]({% post_url 2016-06-19-puppet-powered-mgmt %}), the Puppet translator is now
@@ -345,7 +364,8 @@ that this facility will enable a lot of people to start playing with the `mgmt` 
 Another interesting commonality among `puppet` and `mgmt` is the concept of exported resources.
 It remains to be seen whether a proper translation of those is possible at all.
 It would be nice to have, so that this `mgmt` feature also comes available through `puppet` manifests.
-However, if this will not work after all, I don't expect to loose any sleep over it.
+However, it might turn out that this cannot really work. This would be unfortunate, but
+no tragedy.
 
 ## Limiting the scope
 
@@ -357,8 +377,8 @@ Puppet cannot permanently serve as the code interpreter:
 can take up to 32 attributes, not counting metaparameters. On the other side of this coin,
 `mgmt` introduces some properties that only make sense under its event-based paradigm, such
 as the `exec` type's `watchcmd`. This could be worked around by creating artificial Puppet types
-that are very similar to the ones in `mgmt`, but that would be missing the point (which is
-take advantage of all the smart engineering that has gone into Puppet's type system throughout
+that are very similar to the ones in `mgmt`, but that would be missing the point (which is to
+take advantage of all the smart engineering that has gone into Puppet's existing type system throughout
 the years).
 2. The `puppet` compiler can only ever generate a graph for the specific agent that invoked it.
 The catalog it emits, and the finished graph that is translated from it, will usually be tailored
