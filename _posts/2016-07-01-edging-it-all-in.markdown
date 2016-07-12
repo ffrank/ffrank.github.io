@@ -8,7 +8,8 @@ summary: Of relationships between Puppet's classes and defines, and their transl
 The `mgmt` translator for `puppet` catalogs was truly created from the bottom
 up. We started with a few resource types, and the relationships between
 the translated resources. This falls short for many catalogs, of course,
-because dependencies must often put whole classes in order.
+because dependencies must often put whole classes in order, or do the same
+for instances of defined types.
 
 Allowing the [translator module]({% post_url 2016-06-19-puppet-powered-mgmt %})
 to accept such macro-dependencies was not much work, but it did require some
@@ -119,9 +120,9 @@ Fortunately, `pry` made it easy to pierce this particular mystery as well.
 
 Originally, upon discovering these apparent contradictions, I assumed that
 this "compiled" graph was actually allowed to contain cycles. The idea was
-that cycles were only forbidden for the explicit edges from `before` and
+that cycles were only forbidden wrt. the explicit edges from `before` and
 `require` parameters, `autorequire` rules and so forth.
-However, this thesis had little explanatory power. How are these cyclic edges
+However, this theory had little explanatory power. How are these cyclic edges
 used by Puppet's algorithms? What is the nature of these graph vertices?
 After all, a Puppet class is not a resource.
 
@@ -185,19 +186,19 @@ let's get a proper rendering of the whole graph:
 The naming scheme for the `whit` resources is simple: There is an `admissible`
 marker and its counterpart, called `completed`. This ordered pair encloses each
 container (stages, classes, and defined types, the latter not being depicted above).
-The names are not that important either. Read on to learn how this allows us
+Read on to learn how this insight allows us
 to translate the complete set of relationships for `mgmt`.
 
 ### Holding on to the edge
 
 To model class containment and dependencies in `mgmt`, we already had an idea
-floating around. It was [back in February](https://github.com/purpleidea/mgmt/issues/8#issuecomment-184866939),
-actually, right when we started thinking about the translator concept,
-that we came up with it.
+floating around. We actually came up with it
+[back in February](https://github.com/purpleidea/mgmt/issues/8#issuecomment-184866939),
+right when we started thinking about the translator concept.
 The rough plan was to introduce proxy nodes that do nothing (type `noop`) and just help
-distributing the relationships.
+distribute the relationships.
 
-What I now learned was that Puppet does just that already, using `whit` pseudo-resources.
+What I had now learned was that Puppet does just that already, using `whit` pseudo-resources.
 Incorporating them in the output graph is simple: Each `whit` can be translated right
 into a `noop`. As soon as this happens, relationships between `whit`s and other resources
 are kept as well.
@@ -222,8 +223,8 @@ end
 Accepting the `whit` nodes was implemented in
 [translator DSL](https://github.com/ffrank/puppet-mgmtgraph/blob/master/lib/puppetx/catalog_translation/type/whit.rb).
 
-Furthermore, the handling of edges needed to change. Earlier, the symbolic edge representation
-was used, as generated through the `Edge#to_data_hash` method. It returns source and target
+Furthermore, the handling of edges needed to change. It used to rely on the symbolic edge representation,
+as generated through the `Edge#to_data_hash` method. This method returns source and target
 in the form of resource references such as `Class[Settings]` or `Stage[main]`.
 
 To get at the actual `whit` node edges, the code now foregoes the `to_data_hash` method, and instead
