@@ -54,10 +54,11 @@ a better choice for this purpose. It demonstrates all the important patterns.
 Let's look at the implementation for the new resource.  The heart of a `mgmt`
 resource is its `CheckApply` method. It makes the call whether the resource
 needs applying (the "check"), and if necessary, does the work. James has made
-some nice slides that describe the logic flow. I shall link them here once they
-come available. The `apply` action for the new resource initially was a plain
-[journald API
-call](https://godoc.org/github.com/coreos/go-systemd/journal#Send). Its
+some [nice slides](https://dl.dropboxusercontent.com/u/48553683/slides/mgmt-workshop-systemdconf-2016.pdf)
+that summarizes the logic flow (see page 8).
+
+The `apply` action for the new resource initially was a plain
+[journald API call](https://godoc.org/github.com/coreos/go-systemd/journal#Send). Its
 parameter values must be filled from resource parameters. This made it quite
 clear what the set of parameters should look like:
 
@@ -99,27 +100,27 @@ Some useful notes from our hacking session for future reference:
    So is importing the `encoding/gob` package. Both are needed for loading the
    type from YAML.
 
-    ```go
-    func init() {
-            gob.Register(&MsgRes{})
-    }
-    ```
+```go
+func init() {
+        gob.Register(&MsgRes{})
+}
+```
 
  * Speaking of YAML, it also requires that all resources are part of the
-   `GraphConfig struct` in `gconfig/gconfig.go`.
+   `GraphConfig struct` in `yamlgraph/gconfig.go`.
 
  * The `Watch` function contains quite a bit of boilerplate code itself. It's
    easy to miss important parts of it, and if you do, the resource will likely
    not work quite right. To be safe, start with the implementation from the
    `noop` resource (after all, copy/paste is the most common form of code
    reuse). Specific implementation will usually be added in the `event :=
-   <-obj.events` case.
+   <-obj.Events()` case.
 
  * Be sure that the new resource implements the `CheckApply` method with the
    correct semantics. It's not quite obvious how to arrive at the correct `bool`
    return value from a given situation. Reading existing examples is of limited
-   use. It's best to follow the guide from James's slides (link to
-   follow).
+   use. It's best to follow the guide from
+   [James's slides](https://dl.dropboxusercontent.com/u/48553683/slides/mgmt-workshop-systemdconf-2016.pdf).
 
  * Most resources will want to cache the sync status. The `CheckApply` method
    can rely on the cache, and the `Watch` loop handles cache invalidation.
