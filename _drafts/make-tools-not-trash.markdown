@@ -144,11 +144,19 @@ conversation, let's at least make sure we feel good about it.
 This is not to say that we should avoid mentioning perceived disadvantages of certain
 tools or approaches. Respectfully discussing them can be quite enlightening. Your bad
 experiences could serve as a lead-in for someone else to give you valuable new
-information to help you along.
+information to help you along. Don't get defensive when someone points out a weak spot
+of your favourite. Be mindful and understand more about its trade-offs instead. 
 
-[seeing all the love brought the conclusion: we need a view that embraces tool diversity]
-[talking smack makes us defensive, muddles discussion]
-[it's still good to mention weaknesses as well as strengths - of your faves as well as others]
+Speaking of: have you concluded, for any problem domain, what the best available tool
+is? You might be right for the specific scenarios that you typically face. But for any
+tool that gained significant community traction, you can rest assured that has strengths
+in some areas (that you might not be keenly aware of) where it becomes superior.
+
+There are also impressive examples for combinations of different tools to greater effect.
+For example, Ansible has adopted a Puppet module. It allows the user to trigger Puppet's
+agent directly from Ansible, giving you the expressive power of Puppet, with the operational
+flexibility of Ansible. Conversely, people have been known to invoke Ansible from Puppet's
+pre- and post-run hooks, 
 [which tool is best? none: each chose its tradeoffs, quite deliberately per usual]
 [the puppet-mgmt bridge shows that interoperability can be quite productive]
 [ansible is often paired with puppet to get the best of both worlds]
