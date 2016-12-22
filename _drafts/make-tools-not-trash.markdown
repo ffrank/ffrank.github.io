@@ -125,7 +125,7 @@ of platforms that mgmt will likely not rival. Puppet also has a very mature chai
 tools, with its competition still in the process of of catching up. My personal estimation is
 that Puppet won't be driven from the enterprise anytime soon.
 
-###Liberating our tool use
+###Oh that discussion? Nah, turns out it was a non-issue
 
 In short, I don't think that the work that I or anyone is doing is a direct threat to
 Puppet or its competition.
@@ -156,11 +156,16 @@ There are also impressive examples for combinations of different tools to greate
 For example, Ansible has adopted a Puppet module. It allows the user to trigger Puppet's
 agent directly from Ansible, giving you the expressive power of Puppet, with the operational
 flexibility of Ansible. Conversely, people have been known to invoke Ansible from Puppet's
-pre- and post-run hooks, 
-[which tool is best? none: each chose its tradeoffs, quite deliberately per usual]
-[the puppet-mgmt bridge shows that interoperability can be quite productive]
-[ansible is often paired with puppet to get the best of both worlds]
+pre- and post-run hooks, lending Ansible's immediate cluster management capabilities to Puppet.
 
+Taking interoperation even a step further (and excessively tooting my own horn right now),
+I went so far as to build support for `mgmt` right *into* Puppet through a
+[module]({% post_url 2016-06-19-puppet-powered-mgmt %}). All in the name of a more powerful
+ecosystem. And nobody has gotten mad at me. (As of writing. :-)
+
+###Liberating ourselves from tool allegiance
+
+Here's the thing though: The vendors don't build their 
 [vendors definitely draw inspiration from their competition (both to clone good parts and avoid bad ones)]
 [the communities should open up as much as possible]
 [stop feeling part of the <puppet> community as opposed to the others]
