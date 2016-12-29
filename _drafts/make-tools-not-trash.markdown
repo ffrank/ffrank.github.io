@@ -165,11 +165,34 @@ ecosystem. And nobody has gotten mad at me. (As of writing. :-)
 
 ###Liberating ourselves from tool allegiance
 
-Here's the thing though: The vendors don't build their 
-[vendors definitely draw inspiration from their competition (both to clone good parts and avoid bad ones)]
-[the communities should open up as much as possible]
-[stop feeling part of the <puppet> community as opposed to the others]
-[be a jack of all trades, no need to be a master of any]
+Here's the thing though: The vendors don't build their products in isolation. They don't
+lock their software designers in a windowless cellar. Software tooling evolves in an
+ecosystem. This feels especially true for open source tools. New contenders will often
+inherit the best aspects of established solutions, while trying to avoid their more severe
+(supposed) shortcomings. Competition does not happen without a certain amount of rivalry,
+but in the end, config management tools are birds of a feather, as are their respective
+creators.
+
+It does not necessarily follow that the open source communities around these tools should
+form a unit. However, I propose that users of any (combination of) tools would be better off
+if they felt like a part of a larger config management community, rather than a specific
+crowd that tries to find its own voice to stand out from the others. On the flip side, it
+makes little sense for users and contributors of an open source project to adopt the rivalry
+the software creator feels towards competing projects.
+
+As for our professional disposition, some folks will actually benefit from specializing in
+fewer tools and approaches in order to be most effective. However, if you feel that you can
+manage a little more, and aren't daunted by the multitude, I warmly recommend to widen your
+horizon and pick up a small bouquet of additional skills. You will most certainly gain more
+insight on your favorite tool this way, and who knows...you might even take to a new
+instrument of choice. Don't be afraid of branching out. A smart person
+[once said](https://twitter.com/patrickdebois/status/603960527912591360) that learning
+your first config management tool is the hardest.
+
+###No silver bullet, anyway
+
+I have alluded to this before already: A comparison of the different available config
+management solutions boils down to identifying the trade-offs that each of them accepts.
 
 [some examples of tooling trade-offs (mention own [lack of] proficiencies)]
 [puppet and chef share powerful model and fully featured languages]
