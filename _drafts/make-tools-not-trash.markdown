@@ -193,15 +193,41 @@ your first config management tool is the hardest.
 
 I have alluded to this before already: A comparison of the different available config
 management solutions boils down to identifying the trade-offs that each of them accepts.
+For example, Puppet's unique language allows you create a comprehensive representation
+of a piece of system state. But on the other hand, its declarative nature makes it
+difficult to implement certain scenarios, and it can be difficult even for experienced
+programmers to wrap their head around it.
 
-[some examples of tooling trade-offs (mention own [lack of] proficiencies)]
-[puppet and chef share powerful model and fully featured languages]
-[salt forgoes language in favor of YAML, adds live management capabilities]
-[ansible uses YAML as well, adds agent-less operation and register variables]
-[mgmt does embrace language, and eliminates some architectural issues, probably no full support on as many platforms]
+Ansible simplified things on the language side, but this also introduces challenges.
+It's difficult to take fine-grained control over the order of everything Ansible does
+on a system, for example. Configuration data can be passed quite conveniently through
+host and group variables, but the mechanism has limitations if complex hashes and arrays
+need to be constructed from elements at different levels of the lookup hierarchy.
 
-[each tool brings some unique strengths to the table]
-[professional users and contributors can profit from knowing the respective tradeoffs]
+I cannot really speak on Chef and Salt, as I have no first-hand experience with either...for
+shame. Here's hoping that I'll get that chance before long. Last but not least, `mgmt`
+will most certainly also come with its share of comparative weaknesses to offset its innovations.
+For one, it will probably not support as many platforms as the current tools.
+
+What I'm getting at is this: Each individual config management tool brings its own
+strengths to the table, and none is perfect. In the interest of using the right tool
+for the right job, it's useful to be familiar with these strengths, but also the
+trade-offs. I'm not saying that you should not specialize in one tool that feels
+best for you, but keep in mind:
+
+> When all you have is a hammer, everything looks like a nail.
+
+What's worse, a proficient hammer user, when confronted with unfamiliar but similar
+tools, will be tempted to try and use those screw drivers and paper weights just like
+their trusty old hammer, to the chagrin of everyone involved. Staying in a Puppet mindset
+when switching to Ansible is detrimental to the result. The tool is not as bad as
+a fumbling user will make it look. On the flip side, learning the ways of other tools
+can give you a better perspective on the strengths and weaknesses of your favourite.
+
+My final point is this: Operations folks are actually great to be around. Sure, there is
+still work to do in order to be more inclusive and diversify our group. But I have met
+so many great folks and made fast friends.
+
 [we can all have more fun by interacting with all communities]
 [being more accepting of each others might even further broader inclusivity and diversity]
 
