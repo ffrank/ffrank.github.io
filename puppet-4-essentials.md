@@ -4,10 +4,13 @@ permalink: /puppet-4-essentials/index.html
 title: Book announcement - Puppet 4 Essentials Second Edition
 category: misc
 tags: [book, plugs]
-modified: 07-12-2015
+modified: 25-06-2017
 ---
 
 A short introduction to my second book project, Puppet 4 Essentials - Second Edition, available from Packt Publishing.
+
+**Update:** Read this amazing [review](/puppet-essentials/review.html) that the illustrious
+[John Arundel](http://bitfieldconsulting.com/about) kindly wrote for me.
 
 ## The next generation
 
