@@ -5,6 +5,9 @@ tags: [ puppet, exec, parameter, dependencies ]
 summary: An overview of the (ab-)uses for the refreshonly parameter to Puppet's exec type.
 ---
 
+**Update** *2017-09-03*: A code example included an invalid resource reference.
+Many thanks to [https://twitter.com/jorhett](Jo Rhett) for pointing it out.
+
 #### Manifest imperfection
 
 The goal of any Puppet manifest is to describe a desired state.
@@ -96,7 +99,7 @@ class sys_setup {
 	package {
 		'site-definitions':
 			ensure => 'installed',
-			before => Exec['X'],
+			before => Exec['Y'],
 	}
 }
 {% endhighlight %}
@@ -108,14 +111,14 @@ between whole classes.
 #### Danger, Will Robinson
 
 The `Package['site-definitions']` resource has now become
-a dependency of `Exec['X']`. If for any reason, the `site-definitions`
+a dependency of `Exec['Y']`. If for any reason, the `site-definitions`
 package cannot be successfully installed (think failing post-installation
 hooks) during the Puppet agent transaction that should also set up *software X*,
 the system under management ends up in a bit of a pickle.
 
 Package *X* will be installed, because it has no relation to the `sys_setup`
 class and its contents whatsoever. Puppet should then run two commands
-only once. But because a dependency failed, `Exec['X']` will be skipped during
+only once. But because a dependency failed, `Exec['Y']` will be skipped during
 this transaction. This is where `refreshonly` backfires rather terribly.
 
 The `exec` resources will only refresh themselves when they receive
@@ -123,7 +126,7 @@ a notification. In many cases, such commands get only one chance to fire.
 The subscribed resource is already in sync (package *X* is installed).
 During all follow-up agent runs, Puppet will detect this and not touch
 the `package` resource anymore. There will be no new notifications
-for `Exec['X']` and the system will remain in an inconsistent state.
+for `Exec['Y']` and the system will remain in an inconsistent state.
 
 Even worse, it's quite difficult for the user to detect this and recover
 from this state. They would have to uninstall the *X* package again
