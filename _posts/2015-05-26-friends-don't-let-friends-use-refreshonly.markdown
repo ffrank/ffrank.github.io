@@ -6,7 +6,7 @@ summary: An overview of the (ab-)uses for the refreshonly parameter to Puppet's 
 ---
 
 **Update** *2017-09-03*: A code example included an invalid resource reference.
-Many thanks to [https://twitter.com/jorhett](Jo Rhett) for pointing it out.
+Many thanks to [Jo Rhett](https://twitter.com/jorhett) for pointing it out.
 
 #### Manifest imperfection
 
