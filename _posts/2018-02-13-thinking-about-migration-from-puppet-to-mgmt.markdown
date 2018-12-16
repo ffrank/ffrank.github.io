@@ -117,7 +117,7 @@ has been translated already. This seems actually dangerous, because
 any dependencies and ordering disappear, and neither process can be
 trusted to reliably perform its tasks.
 
-This issue also touches on the central problem with my "mixed graph" approach.
+This issue also touches on the central problem with my "combined graph" approach.
 I will explain this problem shortly, but first let's review the idea itself.
 
 You have probably seen James run simple graphs through mgmt, the graphs
@@ -158,8 +158,9 @@ the rest of the graph.
 
 (Note: This example is contrived and unspecific. In actual code, this might
 happen to actually do the right thing, with or without the `sema` options,
-because mgmt will still add "AutoEdges", described in the same post by James
-linked earlier. If these happen to form adequate dependencies, the mixed
+because mgmt will still add "AutoEdges", described in
+[yet another post on James's blog](https://purpleidea.com/blog/2016/03/14/automatic-edges-in-mgmt/).
+If these happen to form adequate dependencies, the combined
 graph will actually be fine. We cannot rely on this to work in the general
 case, however.)
 
