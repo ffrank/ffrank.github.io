@@ -28,10 +28,10 @@ You may or may not be aware, but
 we just finished another instance of ConfigManagementCamp. The 2018 edition
 featured amazing keynotes, great talks, a legendary hallway and dinner track,
 and of course the annual fringe event day, full of hack days
-and workshops. I spent this last day in the mgmt room, as I did in the previous two
-years. I'm happy that this year, for the first time, we formed an actual crowd
-of more than 10 people, solving onboarding issues, discussing details and
-ideas, and generally having a good time.
+and workshops. I spent this last day in the mgmt room, as I did last year.
+I'm happy that this year, for the first time, we formed an actual crowd
+of more than 10 people at the hack day, solving onboarding issues,
+discussing details and ideas, and generally having a good time.
 
 One of the discussions revolved around a scenario that I hope will become
 quite popular once mgmt stabilizes enough to become generally available:
@@ -56,8 +56,7 @@ there is still a Puppet master running the show, and everyone will keep
 writing Puppet code. This is not a bad thing per se, but it makes
 many of the more powerful and innovative features of mgmt inaccessible.
 For example, the complete range of reactive code behavior that mgmt
-introduces cannot be expressed in a Puppet manifest. Also, each mgmt
-process runs on its own in this scenario, with no clustering at all.
+introduces cannot be expressed in a Puppet manifest.
 
 (Caveat: mgmt *will* behave reactively on resources and so forth,
 even when the graph is derived from a Puppet manifest. However, the more
@@ -150,9 +149,23 @@ and install the JDK way too early, because of mgmt's parallel execution model.
 
 ![Altered example](https://user-images.githubusercontent.com/436765/36123085-e173ff60-104b-11e8-9239-ba1a131bea42.png)
 
+As a workaround to slightly mitigate this effect, you could exploit mgmt's
+`--sema` option (or the `sema` metaparameter; see
+[James's metaparameter post](https://purpleidea.com/blog/2017/03/01/metaparameters-in-mgmt/)
+for more information) in order to suppress any parallelism. However, the
+order of the Java related resources will still be random with respect to
+the rest of the graph.
+
+(Note: This example is contrived and unspecific. In actual code, this might
+happen to actually do the right thing, with or without the `sema` options,
+because mgmt will still add "AutoEdges", described in the same post by James
+linked earlier. If these happen to form adequate dependencies, the mixed
+graph will actually be fine. We cannot rely on this to work in the general
+case, however.)
+
 We are not yet sure how hard or easy it will be for mgmt to accept edges
 to and from resources that are not part of the same piece of code. We do know
-that Puppet will absolutely not accept them, however. So we need a solution.
+that Puppet will absolutely not accept them. So we need a solution.
 
 ### Graph Merging
 
@@ -160,10 +173,37 @@ Here is my initial idea. I have not yet built a proof-of-concept implementation,
 so all of this may well go down the drain soon, but I'd like to keep it
 alive here for posterity.
 
+Consider the earlier pseudo-code example. Assume that the Java module was
+extracted into mgmt code. The graph from both the Puppet and mgmt code is
+supposed to run in one mgmt engine.
+
+We need to define some points to hand over control from one sub-graph to the other.
+Starting from the leftover Puppet code,
+the place of the Java module must be taken by a subgraph from the mgmt code.
+So the Puppet code needs to declare relationships to this subgraph's entrypoint,
+and from its end.
+
+In our example, the mgmt code that replaces the Java module would receive two
+additional nodes: One that serves as the entry point, with outgoing edges to
+all resources that have no other direct predecessors. The other new node
+becomes its terminus, situated as a successor to all nodes that have none.
+
+![Graphs with new nodes](https://user-images.githubusercontent.com/436765/36128552-4646e33c-1063-11e8-8293-8edf690c7004.png)
+
+The Puppet graph also receives additional nodes, at more arbitrary points.
+This scheme would also need a way to declare the direction of the edge
+that connects the Puppet side with the mgmt side. Luckily, I have a
+simplification in mind.
+
 The approach is to allow the mgmt engine to *merge* certain nodes at the moment
-of loading graphs from two distinct sources. This would allow the user to include
-a number of *anchor* style graph nodes in order to define a full order across
-the combined graph.
+of loading the two graphs from the distinct sources. This should make it easier
+to use the *anchor* style graph nodes described above more intuitively.
+
+![Graphs with merged nodes](https://user-images.githubusercontent.com/436765/36129233-69d9b90c-1066-11e8-929a-f9354652bb7e.png)
+
+In order to implement this, both Puppet and mgmt must provide respective ways
+to define nodes and relationships in such a way that mgmt can tell which nodes
+are to be merged.
 
 The easiest way that comes to mind is a scheme for defining certain resources
 that do nothing, but can be matched with counterparts in the other respective
@@ -175,12 +215,14 @@ how Puppet's classes inject implicit resources into the graph, two so-called
 translated into `noop` resources for mgmt. Merging these should not require
 much beyond a clever naming scheme, right?
 
-![Merging graphs](https://user-images.githubusercontent.com/436765/36123084-e14d8e02-104b-11e8-9018-1cf430ad8963.png)
+![Node merging](https://user-images.githubusercontent.com/436765/36129877-b28a0fc8-1069-11e8-9490-3b84fa4ee4b3.png)
 
 Here's the plan: A class named `mgmt_<placeholder>` in Puppet will have its
 start and end `whit` resources merged with a `noop` resource from the mgmt code.
 On the mgmt side, the merging node will be defined as a `noop` resource
 named `puppet_<placeholder>`. The placeholder name must be mutually identical.
+
+![Merging graphs](https://user-images.githubusercontent.com/436765/36123084-e14d8e02-104b-11e8-9018-1cf430ad8963.png)
 
 This scheme will hopefully make it possible for both pieces of code to interact
 in a fashion that is intuitive to the user.
