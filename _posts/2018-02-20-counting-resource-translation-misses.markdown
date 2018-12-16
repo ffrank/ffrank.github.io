@@ -22,8 +22,13 @@ feature set. I wrote about this [earlier](/features/2016-08-19-translating-all-t
 Puppet supports a large number of resource types, many of them implemented in third party
 modules. The set in mgmt is limited, and will likely not match the Puppet ecosystem
 any time soon. That's why we added a default rule to the code translator, which will
-transform unsupported resources into `exec` type resources. These `exec`s call Puppet
-and ask it to perform the task of synchronizing the untranslatable resource.
+transform unsupported resources into `exec` type resources. This `exec` calls Puppet
+and asks it to perform the task of synchronizing the untranslatable resource.
+It uses the equivalent of a `puppet resource <type> <name> ...` call for this.
+
+```
+puppet resource host ensure=present name=database01 ipaddress=10.233.184.12
+```
 
 This trick will now also be used for resources that can be translated in principle,
 but not with respect to all their specific parameters. For example, early mgmt releases
@@ -95,7 +100,7 @@ numbers that are gleaned from translating modules from
 
 Mining Forge code will be more challenging than it may seem. Installing a module
 from a script is simple enough, but Puppet modules are not really functional
-with some code that actually *invokes* them. For many modules, this is as simple
+without some manifest code that actually *invokes* them. For many modules, this is as simple
 as including the module's main class, like in the following examples.
 
 ```
@@ -141,11 +146,11 @@ are presented in order, from the largest to the smallest.
 This feature will soon be available in the translator Puppet module. It will be
 supplemented with a script to run this through various Puppet Forge modules. This
 will allow us to gather the statistics I talked about in this article. However,
-this latter science project does not have a very high priority right now.
+the Forge science project does not have a very high priority right now.
 
 In fact, what's much more useful to us is real feedback from real people. So if
 you read this, and you use Puppet in any capacity, *and* you would like to help
-the mgmt effort, please consider getting the `ffrank-mgmtgraph` Puppet module
+the mgmt project, please consider getting the `ffrank-mgmtgraph` Puppet module
 and gathering the numbers (that is, as soon as the `stats` feature is added).
 Reach out to [me](https://twitter.com/felis_rex) or
 [James](https://twitter.com/purpleidea) via Twitter, or open an issue in the
