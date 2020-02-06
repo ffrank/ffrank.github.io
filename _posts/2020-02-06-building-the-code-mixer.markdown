@@ -1,7 +1,8 @@
 ---
 layout: post
 category: features
-tags: mgmt puppet graph language compiler
+tags: [ mgmt, puppet, graph, language, compiler ]
+summary: A deep dive into the development of a new and unusual mgmt GAPI
 ---
 
 This blog is not dead. It hasn't seen any new content in a long while,
