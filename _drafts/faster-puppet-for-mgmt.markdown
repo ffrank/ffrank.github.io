@@ -30,16 +30,23 @@ however. Even the full set of "core adjacent" types is nothing to scoff at.
 Any resources that mgmt does not support need to get synchronized in
 another way.
 
-Additionally, any actual resources even of mgmt supported types
+```
+microwave_oven { "CN-4PK":
+    connected => true,
+    ...
+}
+```
+
+Additionally, any actual instances even of mgmt supported types
 cannot be modeled correctly by mgmt if they use properties that are
-exclusive to Puppet. For example, mgmt in version 0.0.21 does not (yet?)
-have a counterpart to Puppet's `refresh_only` parameter in the `exec` type
-(which is [an
-anti-pattern]({ post_url 2015-05-26-friends-don't-let-friends-use-refreshonly %})
-anyway, but that's not the point here). Imagine such an `exec` resource:
-If we were to just transform it to `mgmt`, it would fire its command
-indiscriminately, while the Puppet code was designed to run it only under
-very specific circumstances.
+exclusive to Puppet. For example, mgmt does not support downloading files from
+a Puppet server.
+
+```
+file { "/etc/motd":
+  source => "puppet:///modules/motd/default",
+}
+```
 
 To provide for such resources, we implemented [a
 workaround]({% post_url 2016-08-19-translating-all-the-things %}) that would
@@ -52,11 +59,13 @@ exec "substitute Cron[refresh-my-stuff]" {
     cmd => "puppet resource cron refresh-my-stuff command=/path/to/script minute=...
 ```
 
-The actual implementation is a little more involved (see linked article), and
-had me introduce the `puppet yamlresource` face. We have recently boosted its
-performance using [a new
+The actual implementation is a little more involved (see article linked above),
+and had me introduce the `puppet yamlresource` face. We have recently boosted
+its performance using [a new
 subcommand]({% post_url 2020-02-09-puppet-scripting-host %}) `puppet
-yamlresource receive`.
+yamlresource receive`. It allows users or programs to send resource
+descriptions directly to Puppet's stdin stream. Puppet will sync these
+resources directly and immediately, one by one.
 
 In order to allow mgmt to take advantage of this latest addition, we needed
 to add three properties to mgmt with respect to its Puppet integration:
@@ -83,43 +92,146 @@ channels.
 
 For easy management inside mgmt, I borrowed the Singleton pattern from
 object oriented programming. There is a global struct with a synchronized
-function that will retrieve it, and run its initialization if needed. This
-initialization procedure mainly consists of the start of the Puppet process.
+function that will retrieve it.
+
+```
+type pippetReceiver struct {
+        stdin         io.WriteCloser
+        stdout        io.ReadCloser
+        registerMutex sync.Mutex
+        applyMutex    sync.Mutex
+        registered    int
+}
+
+func getPippetReceiverInstance() *pippetReceiver {
+        for pippetReceiverInstance == nil {
+                pippetReceiverOnce.Do(func() { pippetReceiverInstance = &pippetReceiver{} })
+        }
+        return pippetReceiverInstance
+}
+```
+
+`pippetReceiverOnce` is a [sync.Once](https://golang.org/pkg/sync/#Once) object
+that makes the method thread safe. ("pippet" is not a typo and will be explained
+in the next section.) The `pippetReceiver` is not properly initialized in this
+moment. That does not happen before the first consumer _registers_ itself. 
+
+```
+func (obj *pippetReceiver) Register() error {
+        obj.registerMutex.Lock()
+        defer obj.registerMutex.Unlock()
+        obj.registered = obj.registered + 1
+        if obj.registered > 1 {
+                return nil
+        }
+        // count was increased from 0 to 1, we need to (re-)init
+        var err error
+        if err = obj.Init(); err != nil {
+                obj.registered = 0
+        }
+        return err
+}
+```
+
 Users of this data object are typically graph resources that rely on
-Puppet. They call yet another function that implements the protocol of
+Puppet. The next section (below) goes into more detail about these resources.
+They call yet another function that implements the protocol of
 `puppet yamlresource receive`, passing the resource details, and a reference
 to the mentioned global struct. The reference uses a minimalistic interface
 that this structure implements.
 
+```
+type PippetRunner interface {
+        LockApply()
+        UnlockApply()
+        InputStream() io.WriteCloser
+        OutputStream() io.ReadCloser
+}
+
+// applyPippetRes does the actual work of making Puppet synchronize a resource.
+func applyPippetRes(runner PippetRunner, resource *PippetRes) (bool, error) {
+        ... #*
+```
+
+The `LockApply` and `UnlockApply` method just wrap the `applyMutex` from the
+`struct pippetReceiver`. `InputStream` and `OutputStreams` are basically getter
+methods for `stdin` and `stdout` in the same struct.
+
 An aside on golang code design: The synchronization function was originally
-implemented as a method on the Puppet process structure itself. That's because
+implemented as a method of `struct pippetReceiver` itself. That's because
 I was in the mind trap of thinking in terms of object oriented programming.
 I had intended to build tests for all this code by generating a mock of the
-(extensive) general interface 
-[aside: was originally method of the runner struct]
-[makes testing hard]
-[see below about testing]
+(extensive) general interface. (The mind trap leading here was the absurdly
+powerful mocking that is available in Ruby.)
+
+What I had to realize is that this made testing very hard. In fact, I am
+dedicating a whole section to this topic towards the end of this article.
 
 ## Graph nodes for Puppet
 
-[sending strings to puppet cannot go into an exec]
-[also not desirable]
-[dedicated resource instead]
+Now that mgmt is capable of running Puppet in the background, making it wait
+for resources to sync, mgmt will need a way to also supply these resources.
+This cannot be done with an `exec` type node, because these write their
+output to the system outside the mgmt process. The pipe to Puppet lives
+within the mgmt process, though.
 
-[structure is simple, meant for easy marshalling]
-[actually cleaner than exec workaround]
-[parameters are not structured, but held as YAML instead]
-[note: passed to Puppet as YAML wrapped in JSON]
-[JSON is there to make sure titles can be arbitrary]
+Besides, running an `exec` in order to write a resource description into
+Puppet's stdin stream would partly defeat the purpose. Overhead is to be
+avoided. What is needed here is a dedicated resource type. Because it will
+write information into a *pipe* to *Puppet*, it was named "Pippet".
+
+The structure of this type is very simple, designed specifically for easy
+marshalling.
+
+```
+type PippetRes struct {
+        ...
+        Type string `yaml:"type" json:"type"`
+        Title string `yaml:"title" json:"title"`
+        Params string `yaml:"params" json:"params"`
+
+        runner *pippetReceiver
+}
+```
+
+Notably, the `Params` are not stored as map, but just as a string. They are
+expected to be represented by a YAML dictionary. This YAML will be passed
+directly to Puppet, wrapped in a JSON object, along with the `Type` and
+`Title` of the resource. Puppet does not really require the JSON wrapping,
+but it is done in order to avoid any whitespace issues. (For more details,
+I would direct you to the [article about `puppet yamlresource
+receive`]({% post_url 2020-02-09-puppet-scripting-host %}) again.)
+This unusual practice is why the `PippetRes struct` contains JSON field tags.
+You will not find these in most mgmt resource structs.
+
+Pippet resources are not really supposed to be used in mgmt code. They are
+meant to result from Puppet manifest translations. The next section provides
+some details.
 
 ## New graphs from Puppet
 
-[replace exec workaround]
-[actually added new default, old one still available]
-[further savings: skip noop query, should not be required]
+The `ffrank-mgmtgraph` Puppet module received a new "default translation" rule.
+You can see [the definition of this
+rule](https://github.com/ffrank/puppet-mgmtgraph/blob/master/lib/puppetx/catalog_translation/type/default_translation_to_pippet.rb)
+in the module code, written in the [resource translator
+DSL](https://github.com/ffrank/puppet-mgmtgraph/blob/master/DSL.md).
+This rule replaces the original `exec` based workaround (which will be kept
+for reasons of nostalgia, and possibly compatibilty).
+
+This is really all there is to it. As this changes the default behavior of
+the `mgmtgraph` Puppet face, it was part of a "major" release (air quotes
+courtesy of the fact that we're still pre-1.0 release). We have dropped
+compatibility with mgmt 0.0.20 and older (which do not have the `pippet`
+resource yet). We also discovered some code cruft that got cleaned up,
+but that is beyond the scope of this article.
 
 ## A word about tests
 
+When teaching mgmt to run the Puppet resource receiver process, I first
+approached the code with a "Ruby state of mind". A struct with fields for
+all the runtime data was created, with methods to perform initialization,
+tracking for resources that use Puppet this way, and the actual communication.
+My first idea for building tests for this
 [implementation started with Ruby state of mind]
 [intended to mock pippetrunner, stub sync method]
 [found that this makes testing brittle if not impossible]
