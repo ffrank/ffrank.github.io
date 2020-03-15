@@ -61,7 +61,7 @@ You don't just get to just re-label axis on a diagram to prove an arbitrary
 point you're trying to make. That's not how any of this works. (This is some
 Trump level of misinformation.)
 
-But even when assumption holds true, it's deeply cynical and a
+But even when this assumption holds true, it's deeply cynical and a
 bad, bad accusation against world leaders, to conclude that this trade is
 being made willingly. "Well yes, we could take action now, but we will save
 a half trillion by waiting until Tuesday" is *not* a statement a normal person
