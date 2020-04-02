@@ -43,25 +43,28 @@ adventure. It logs etcd messages at the INFO level, so I'm able to spot the
 following helpful messages in the output of mgmt:
 
 ```
-{"level":"info","ts":"2020-03-17T22:35:35.686Z","caller":"embed/etcd.go:117","msg":"configuring peer listeners","listen-peer-urls":["http://localho
-st:2380"]}
-{"level":"info","ts":"2020-03-17T22:35:35.687Z","caller":"embed/etcd.go:127","msg":"configuring client listeners","listen-client-urls":["http://loc
-alhost:2379"]}
+{"level":"info","ts":"2020-03-17T22:35:35.686Z","caller":"embed/etcd.go:117","msg":"configuring peer listeners","listen-peer-urls":["http://localhost:2380"]}
+{"level":"info","ts":"2020-03-17T22:35:35.687Z","caller":"embed/etcd.go:127","msg":"configuring client listeners","listen-client-urls":["http://localhost:2379"]}
 ```
 
 In short, `http://localhost:2380` is the "peer URL", while port 2379 belongs to
 the "client URL". Here are relevant output lines from `mgmt help run`:
 
 ```
---client-urls value            list of URLs to listen on for client traffic [$MGMT_CLIENT_URLS]
---server-urls value            list of URLs to listen on for server (peer) traffic [$MGMT_SERVER_URLS]
+--client-urls value \
+	list of URLs to listen on for client traffic [$MGMT_CLIENT_URLS]
+--server-urls value \
+	list of URLs to listen on for server (peer) traffic [$MGMT_SERVER_URLS]
 ```
 
 It's nice and all that we can use environment variables instead of switches,
 but let's keep everything in one place for now.
 
 ```
-# mgmt run --tmp-prefix --hostname h1 --ideal-cluster-size 3 --client-urls http://138.68.104.187:2379 --server-urls http://138.68.104.187:2380 yaml examples/yaml/etcd1a.yaml
+# mgmt run --tmp-prefix --hostname h1 --ideal-cluster-size 3 \
+	--client-urls http://138.68.104.187:2379 \
+	--server-urls http://138.68.104.187:2380 \
+	yaml examples/yaml/etcd1a.yaml
 ```
 
 Another look at `netstat` (and in the etcd output) reveals that it listens to
@@ -90,7 +93,10 @@ respectively. In a networked setup, there hardly is a point, so this is my
 proposal:
 
 ```
-# mgmt run --tmp-prefix --hostname h2 --seeds http://138.68.104.187:2379 --client-urls http://134.122.78.105:2379 --server-urls http://134.122.78.105:2380 yaml etcd1b.yaml
+# mgmt run --tmp-prefix --hostname h2 --seeds http://138.68.104.187:2379 \
+	--client-urls http://134.122.78.105:2379 \
+	--server-urls http://134.122.78.105:2380 \
+	yaml etcd1b.yaml
 ```
 
 Works like a charm. Server comes up and creates these files:
@@ -104,7 +110,10 @@ Works like a charm. Server comes up and creates these files:
 Final one:
 
 ```
-# mgmt run --tmp-prefix --hostname h3 --seeds http://138.68.104.187:2379 --client-urls http://134.122.90.164:2379 --server-urls http://134.122.90.164:2380 yaml etcd1c.yaml
+# mgmt run --tmp-prefix --hostname h3 --seeds http://138.68.104.187:2379 \
+	--client-urls http://134.122.90.164:2379 \
+	--server-urls http://134.122.90.164:2380 \
+	yaml etcd1c.yaml
 ```
 
 The cluster is up, and this is what it looks like from the original seed:
@@ -165,4 +174,4 @@ mgmt run --tmp-prefix --hostname h3 --seeds http://seed.playground.net:2379 \
 ```
 
 Enjoy your ad hoc clusters, and let me know via Twitter if you've managed to
-built anything cool with it.
+build anything cool with it.
