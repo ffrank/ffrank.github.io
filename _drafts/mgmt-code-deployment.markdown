@@ -183,5 +183,353 @@ lib/deploy.go:          return errwrap.Wrapf(err, "could not create deploy id `%
 ```
 
 This is why the message is repeated in the output: The second match (the one
-with the backticks around the id number) wraps the first one.
+with the backticks around the id number) wraps the first one. That is to say,
+the error is being generated in `etcd/deployer/deployer.go`. This is the code
+piece, right at the end of the `AddDeploy` function:
+
+```
+result, err := obj.Client.Txn(ctx, ifs, ops, nil)
+if err != nil {
+        return errwrap.Wrapf(err, "error creating deploy id %d", id)
+}
+if !result.Succeeded {
+        return fmt.Errorf("could not create deploy id %d", id)
+}
+```
+
+It looks like the "deployer" is attempting to make a client transaction towards
+the etcd cluster. The `Client.Txn` call does not raise an error, but the
+transaction is not successful either. It is not immediately clear what the
+possible cause for this is. I suspect I will have to raise the etcd log level
+once more.
+
+## Lab reproduction
+
+The environment in which I have first observed this behavior is somewhat
+unwieldy. It consists of three running mgmt instances on separate virtual
+machines, creating an ad hoc etcd cluster. I have not devised a convenient way
+to restart this environment from scratch. (To make it worse, it does not seem
+to cleanly restart without discarding some persistent data either, which will
+warrant yet another article soon.)
+
+As such, my next step is to try and reproduce in a more simple context.
+Instead of configuring my seed server for network interaction, I will run mgmt
+plainly.
+
+```
+mgmt run empty
+```
+
+An idle mgmt process starts up, waiting for connections on 127.0.0.1.
+
+```
+# mgmt deploy --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
+```
+
+As expected, this indeed deploys a graph to my standalone mgmt instance. Better
+yet, a second deployment yields the exact same error observed in the cluster
+environment described above. I'm a lot more comfortable debugging this.
+
+## Some etcd inspection
+
+First dumb check: What happens when I try and deploy the exact same thing twice
+in a row?
+
+```
+# mgmt deploy  --seeds http://127.0.0.1:2379 lang e
+xamples/lang/env1.mcl
+This is: mgmt, version: 0.0.21-73-gd0f971f
+Copyright (C) 2013-2020+ James Shubin and the project contributors
+Written by James Shubin <james@shubin.ca> and the project contributors
+14:55:05 main: start: 1589122505506627793
+14:55:05 deploy: hash: d0f971f69dff0c187ee6e9e910eb50e55fb8ac29
+14:55:05 deploy: previous deploy hash: 10aa80e8f57f4b37c9204fe104e2e8c11e5bf861
+14:55:05 deploy: previous max deploy id: 0
+First dumb check: What happens when I try and deploy the exact same thing twice
+in a row?
+
+```
+# mgmt deploy  --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
+This is: mgmt, version: 0.0.21-73-gd0f971f
+Copyright (C) 2013-2020+ James Shubin and the project contributors
+Written by James Shubin <james@shubin.ca> and the project contributors
+14:55:05 main: start: 1589122505506627793
+14:55:05 deploy: hash: d0f971f69dff0c187ee6e9e910eb50e55fb8ac29
+14:55:05 deploy: previous deploy hash: 10aa80e8f57f4b37c9204fe104e2e8c11e5bf861
+14:55:05 deploy: previous max deploy id: 0
+...
+14:55:07 deploy: success, id: 1
+14:55:07 deploy: goodbye!
+```
+
+I cut away some diagnostic messages from the `lang` GAPI that are not of
+interest to me (yet).
+
+Second run:
+
+```
+# mgmt deploy  --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
+...
+14:55:23 main: start: 1589122523215602941
+14:55:23 deploy: hash: d0f971f69dff0c187ee6e9e910eb50e55fb8ac29
+14:55:23 deploy: previous deploy hash: 10aa80e8f57f4b37c9204fe104e2e8c11e5bf861
+14:55:23 deploy: previous max deploy id: 1
+...
+14:55:24 deploy: goodbye!
+14:55:24 deploy: error: could not create deploy id `2`: could not create deploy id 2
+```
+
+It appears correct that the deployer would attempt to create ID 2, as a deploy
+with ID 1 was successfully created in the previous run. It strikes me as odd
+that the "previous deploy hash" is apparently *not* updated through the initial
+deployment. The second attempt indicates the same value that is seen when
+deploying to an empty etcd.
+
+Some printf debugging of the data structures pushed around by the deployer was
+proves not so promising, so it appears it's time to read up on how etcd
+transactions actually work.
+
+## Adding a deploy
+
+Getting an overview of the `AddDeploy` function, the interface doesn't look too
+complicated at all. Broadly speaking, it seems to take three preparatory steps:
+
+ 1. It constructs appropriate paths (within etcd's own key-value store, I
+    assume).
+ 2. It builds a list of "ifs", but only if this is not the very first deploy
+    (it appears plausible that this code path contains a bug).
+ 3. It builds a list of "ops", probably operations that should be done
+    on the etcd data.
+
+This is fascinating and all, but as said, it's past time to read some reference
+material. First stop is the documentation for the [etcd
+clientv3](https://godoc.org/go.etcd.io/etcd/clientv3) package that is in broad
+use by mgmt. Oddly though, the only `Txn` method described here is for the
+`Op` structure, not the `Client` structure as I had expected.
+
+It should be noted that the deployer code in mgmt does not use etcd interfaces
+directly, but rather the internal `interfaces.Client` interface from mgmt's own
+etcd package. According to its code comments, this interface is implemented by
+EmbdEtc, a type from the same package. Looking at its `MakeClient` method,
+that just seems to allow deriving a client object from a pre-existing client:
+
+```
+func (obj *EmbdEtcd) MakeClient() (interfaces.Client, error) {
+        c := client.NewClientFromClient(obj.etcd)
+```
+
+Without further digging, I will assume that the deployer will ultimately use
+the `SimpleClient` object from this package, but I will try to confirm this
+suspicion with a brief dive into the deployer code. This is how in
+`lib/deploy.go`, the client object is created:
+
+```
+etcdClient := client.NewClientFromSeedsNamespace(
+        cliContext.StringSlice("seeds"), // endpoints
+        NS,
+)
+```
+
+NS is a constant from `lib/main.go` with value "/\_mgmt".
+
+The `NewClientFromSeedsNamespace` function will return a `Simple` object which
+does wrap an `etcd/clientv3.Client` object. So here we are: The `Txn` method
+I have been searching is defined on this `etcd.Simple` type:
+
+```
+// Txn runs a transaction.
+func (obj *Simple) Txn(ctx context.Context, ifCmps []etcd.Cmp, thenOps, elseOps []etcd.Op) (*etcd.TxnResponse, error) {
+        resp, err := obj.kv.Txn(ctx).If(ifCmps...).Then(thenOps...).Else(elseOps...).Commit()
+```
+
+It's still more than a little confusing to me. It uses the `Txn` method through
+the
+KV interface associated to this client object, to create an etcd transaction
+(or so I suppose). The semantics are implemented through the `If`, `Then`, and
+`Else` method then.
+
+The etcd API documentation is not rich with information about how the response
+object returned by the `Commit` call should be interpreted. There is one very
+basic example for the `Txn` method in the [description of the KV
+interface](https://godoc.org/go.etcd.io/etcd/clientv3#KV), but it does not
+go into error handling at all. It feels like this was a wild goose chase after
+all.
+
+## Taking ctl
+
+In order to get a better feel for whatever etcd is doing here, I want some more
+direct access. From an [earlier
+adventure]({% post_url 2020-03-09-getting-etcd-back %}) I still have this
+`etcdctl` binary around. It graciously connects to a fresh instance of
+
+```
+mgmt run empty
+```
+
+Here's what that looks like:
+
+```
+# ETCDCTL_API=3 ~/etcdctl --endpoints 127.0.0.1:2380 member list
+8e9e05c52164694d, started, ubuntu-s-1vcpu-1gb-fra1-01, http://localhost:2380, http://localhost:2379, false
+```
+
+With etcd3, this is how I can inspect all key/value pairs stored:
+
+```
+# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix
+```
+
+In my current state of experimentation, this is very promising, because it
+contains pairs like the following:
+
+```
+/_mgmt/deploy/1/hash
+d0f971f69dff0c187ee6e9e910eb50e55fb8ac29
+/_mgmt/deploy/1/payload
+P/+JAwEBBkRlcGxveQH/igABBQECSUQBBgABBE5hbWUBDAABBE5vb3ABAgABBFNlbWEBBAABBEdBUEkBEAAAADX/igIEbGFuZwIBAQoqbGFuZy5HQVBJ/4sDAQEER0FQSQH/jAABAQEI
+SW5wdXRVUkkBDAAAAEH/jD0BOmV0Y2RmczovLy9mcy9kZXBsb3kvMS02MmI0ODIxZi05MTAyLTQ5M2QtYmI3Yi03YjIxY2QxOTJhZjYAAA==
+```
+
+These look like descriptors for the deploy that was actually successful. There
+is also this (please note, there is a fair bit of binary data that is not
+represented here; this is just what appears in the terminal window):
+
+```
+/_mgmt/fs/deploy/1-62b4821f-9102-493d-bb7b-7b21cd192af6
+:
+superBlock
+DataPrefix
+          Hash
+              TreeHFilePath
+                           ModeModTimChildrenHash
+                                                 Time
+metadata.yaml|@8fe0adbefe197914bd143d2fd3199f8368654405fe135785c81b277b4ac1d33env1.mcl@f54aca743575340a6f10cab5393a7f79df4f34910e0fd05816c7c
+49fb172c9ae
+```
+
+And also quite interesting:
+
+```
+/_mgmt/storage/{sha256}f54aca743575340a6f10cab5393a7f79df4f34910e0fd05816c7c49fb172c9ae
+import "fmt"
+import "sys"
+
+$env = sys.env()
+$m = maplookup($env, "GOPATH", "")
+
+print "print0" {
+        msg => if sys.hasenv("GOPATH") {
+                fmt.printf("GOPATH is: %s", $m)
+        } else {
+                "GOPATH is missing!"
+        },
+}
+```
+
+It's also very interesting that the unsuccessful second deploy is represented
+as well:
+
+```
+/_mgmt/fs/deploy/2-c9807a7e-c1c0-48e2-b3fa-74e458ae0016
+:
+superBlock
+DataPrefix
+          Hash
+              TreeHFilePath
+                           ModeModTimChildrenHash
+                                                 Time
+metadata.yamlJ@8fe0adbefe197914bd143d2fd3199f8368654405fe135785c81b277b4ac1d33env1.mcl+@f54aca743575340a6f10cab5393a7f79df4f34910e0fd05816c7
+c49fb172c9ae
+```
+
+However, instead of trying to immediately match that to code excerpts I've seen
+in mgmt, I will first take one step back, start over from a clean slate, and
+see how the key/value pairs build up through my experiment. It should be easier
+to understand the code after this step.
+
+## Starting over
+
+The easiest way to get a pristine etcd key/value store is of course to restart
+the mgmt seed as follows:
+
+```
+# mgmt run --tmp-prefix empty
+```
+
+Let's see what gets initialized directly.
+
+```
+# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix
+/_mgmt/chooser/dynamicsize/idealclustersize
+5
+/_mgmt/endpoints/ubuntu-s-1vcpu-1gb-fra1-01
+http://localhost:2379
+/_mgmt/nominated/ubuntu-s-1vcpu-1gb-fra1-01
+http://localhost:2380
+/_mgmt/volunteer/ubuntu-s-1vcpu-1gb-fra1-01
+http://localhost:2380
+```
+
+All this data is purely organizational in nature. Good. Next, deploying the
+first graph.
+
+```
+# ./mgmt deploy --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
+...
+# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix --keys-only    /_mgmt/chooser/dynamicsize/idealclustersize
+/_mgmt/deploy/1/hash
+/_mgmt/deploy/1/payload
+/_mgmt/endpoints/ubuntu-s-1vcpu-1gb-fra1-01
+/_mgmt/fs/deploy/1-25ab3b42-f8d0-4147-8864-73f01d9963f3
+/_mgmt/nominated/ubuntu-s-1vcpu-1gb-fra1-01
+/_mgmt/storage/{sha256}8fe0adbefe197914bd143d2fd3199f8368654405fe135785c81b277b4ac1d336
+/_mgmt/storage/{sha256}e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+/_mgmt/storage/{sha256}f54aca743575340a6f10cab5393a7f79df4f34910e0fd05816c7c49fb172c9ae
+/_mgmt/volunteer/ubuntu-s-1vcpu-1gb-fra1-01
+```
+
+So this step has added
+
+ * Hash and Payload for deploy 1
+ * an entry in `fs` for deploy 1, keyed with a UUID
+ * three storage entries
+
+As for the storage entries, their respective values are
+
+ * nothing at all
+ * the mcl code that was deployed
+ * another list of key/value pairs:
+  * main: env1.mcl
+  * path: ""
+  * files: ""
+  * license: ""
+  * parentpathblock: false
+  * metadata: null
+
+Now to see exactly what happens with another attempted deployment.
+
+```
+# ./mgmt deploy --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
+...
+# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix --keys-only    /_mgmt/chooser/dynamicsize/idealclustersize
+/_mgmt/deploy/1/hash
+/_mgmt/deploy/1/payload
+/_mgmt/endpoints/ubuntu-s-1vcpu-1gb-fra1-01
+/_mgmt/fs/deploy/1-25ab3b42-f8d0-4147-8864-73f01d9963f3
+/_mgmt/fs/deploy/2-5e79a475-b6ad-471c-890a-5e52c1b99baa
+/_mgmt/nominated/ubuntu-s-1vcpu-1gb-fra1-01
+/_mgmt/storage/{sha256}8fe0adbefe197914bd143d2fd3199f8368654405fe135785c81b277b4ac1d336
+/_mgmt/storage/{sha256}e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+/_mgmt/storage/{sha256}f54aca743575340a6f10cab5393a7f79df4f34910e0fd05816c7c49fb172c9ae
+/_mgmt/volunteer/ubuntu-s-1vcpu-1gb-fra1-01
+```
+
+So the only key that was added is
+`/_mgmt/fs/deploy/2-5e79a475-b6ad-471c-890a-5e52c1b99baa`. No values of
+existing keys have changed either. With all this insight, it's time to head
+back into source code and output, and to try and find out just what keeps going
+wrong here.
+
+## Bug hunt
+
 
