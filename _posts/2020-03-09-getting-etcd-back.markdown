@@ -63,8 +63,7 @@ was quite reminiscent of what I had seen mgmt do on repeat while trying to
 contact the original cluster member.
 
 ```
-ETCDCTL_API=3 ./vendor/go.etcd.io/etcd/bin/etcdctl --endpoints 127.0.0.1:2380 member l
-ist
+ETCDCTL_API=3 ./vendor/go.etcd.io/etcd/bin/etcdctl --endpoints 127.0.0.1:2380 member list
 {"level":"warn","ts":"2020-03-08T19:25:00.394Z","caller":"clientv3/retry_interceptor.go:61","msg":"retrying of unary invoker failed","target":"endpoint://client-f55a7a6d-3208-45ef-9a7a-f28f55805a05/127.0.0.1:2380","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest connection error: connection error: desc = \"transport: Error while dialing dial tcp 127.0.0.1:2380: connect: connection refused\""}
 Error: context deadline exceeded
 ```
