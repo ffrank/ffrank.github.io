@@ -511,7 +511,8 @@ Now to see exactly what happens with another attempted deployment.
 ```
 # ./mgmt deploy --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
 ...
-# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix --keys-only    /_mgmt/chooser/dynamicsize/idealclustersize
+# ~/etcdctl --endpoints 127.0.0.1:2380 get / --prefix --keys-only
+/_mgmt/chooser/dynamicsize/idealclustersize
 /_mgmt/deploy/1/hash
 /_mgmt/deploy/1/payload
 /_mgmt/endpoints/ubuntu-s-1vcpu-1gb-fra1-01
@@ -532,4 +533,67 @@ wrong here.
 
 ## Bug hunt
 
+Wandering back into the source code, starting in
+[lib/deploy.go](https://github.com/purpleidea/mgmt/blob/e9af8a2595e336542c9dfc656fe808ddc6937a59/lib/deploy.go),
+I'm taking another hard look at the `deploy` function, when it strikes me: The
+"hash" is retrieved in the following code block:
 
+```
+var hash, pHash string
+if !cliContext.Bool("no-git") {
+        wd, err := os.Getwd()
+        if err != nil {
+                return errwrap.Wrapf(err, "could not get current working directory")
+        }
+        repo, err := git.PlainOpen(wd)
+        if err != nil {
+                return errwrap.Wrapf(err, "could not open git repo")
+        }
+```
+
+The `deploy` command (silently) opens and inspects the git repository from the
+current working directory. I have been trying `mgmt deploy` invocations from
+the root of my clone of the mgmt source code this whole time. Was this what
+kept throwing the deployment off?
+
+```
+# cd
+# mgmt deploy  --seeds http://127.0.0.1:2379 \
+    lang /path/to/examples/lang/env1.mcl
+This is: mgmt, version: 0.0.21-73-gd0f971f-dirty
+Copyright (C) 2013-2020+ James Shubin and the project contributors
+Written by James Shubin <james@shubin.ca> and the project contributors
+10:05:24 main: start: 1590314724368572336
+10:05:24 deploy: goodbye!
+10:05:24 deploy: error: could not open git repo: repository does not exist
+```
+
+Alright then...adding `--no-git`.
+
+```
+# mgmt deploy --no-git --seeds http://127.0.0.1:2379 \
+    lang /path/to/examples/lang/env1.mcl
+...
+09:50:54 deploy: success, id: 2
+09:50:54 deploy: goodbye!
+```
+
+Success. Deploying with the `--no-git` options works without issue.
+So it very much seems to be as I suspected all along: This is not a programming
+error, but what I consider to be a UX bug. The tool makes an assumption about
+what I'm trying to do (deploy mcl code from my git repository), fails to
+communicate this properly, and lets me walk into an error because my own
+assumptions differ from those of the tool.
+
+In a follow-up post, I will document my reporting of this issue, along with my
+little quest for The Path of Least Surprise.
+
+## Summary
+
+Code gets deployed to an mgmt cluster using the `mgmt deploy` subcommand,
+which feels much like the `run` subcommand in terms of form and function.
+The `deploy` command expects to be invoked from a git clone root directory
+(or with other means to locate a git repository) and uses git metadata for
+the deployment. This can lead to cryptic errors when trying to deploy code.
+The exact circumstances leading to such errors will be detailed in another
+blog post.
