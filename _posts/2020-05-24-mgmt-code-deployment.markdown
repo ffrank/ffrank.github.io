@@ -12,7 +12,7 @@ to your team, but eventually you will want the tool to do some actual work.
 
 But how? We won't be launching mgmt manually on each managed node to read the
 respective code file to run. (I mean, you can do that if that's your jam, but
-it will not be the canonical use case.)
+it will not be the canonical standard use case.)
 
 I have read of "deploys" in the code, so let's go find out how these work.
 
@@ -74,7 +74,10 @@ OPTIONS:
 
 Funnily, you can use `help` on this subcommand level as well, so `mgmt deploy
 help` will give you the same information. You can even get `mgmt deploy help
-lang`, for example. In all, the interface for `mgmt deploy` is very similar to
+lang`, for example.
+
+Perusing the full help page makes it rather clear: The interface for `mgmt
+deploy` is very similar to
 that of `mgmt run`, so it seems intuitively clear how it's supposed to work.
 
 ## First deployment
@@ -177,7 +180,7 @@ It didn't work. Let's find out why.
 The error message is found in two places.
 
 ```
-t# git grep "could not create deploy"
+# git grep "could not create deploy"
 etcd/deployer/deployer.go:              return fmt.Errorf("could not create deploy id %d", id)
 lib/deploy.go:          return errwrap.Wrapf(err, "could not create deploy id `%d`", id)
 ```
@@ -236,19 +239,6 @@ First dumb check: What happens when I try and deploy the exact same thing twice
 in a row?
 
 ```
-# mgmt deploy  --seeds http://127.0.0.1:2379 lang e
-xamples/lang/env1.mcl
-This is: mgmt, version: 0.0.21-73-gd0f971f
-Copyright (C) 2013-2020+ James Shubin and the project contributors
-Written by James Shubin <james@shubin.ca> and the project contributors
-14:55:05 main: start: 1589122505506627793
-14:55:05 deploy: hash: d0f971f69dff0c187ee6e9e910eb50e55fb8ac29
-14:55:05 deploy: previous deploy hash: 10aa80e8f57f4b37c9204fe104e2e8c11e5bf861
-14:55:05 deploy: previous max deploy id: 0
-First dumb check: What happens when I try and deploy the exact same thing twice
-in a row?
-
-```
 # mgmt deploy  --seeds http://127.0.0.1:2379 lang examples/lang/env1.mcl
 This is: mgmt, version: 0.0.21-73-gd0f971f
 Copyright (C) 2013-2020+ James Shubin and the project contributors
@@ -285,9 +275,9 @@ that the "previous deploy hash" is apparently *not* updated through the initial
 deployment. The second attempt indicates the same value that is seen when
 deploying to an empty etcd.
 
-Some printf debugging of the data structures pushed around by the deployer was
-proves not so promising, so it appears it's time to read up on how etcd
-transactions actually work.
+Some printf debugging (not pasted here) of the data structures pushed around by
+the deployer proves not so promising, so it appears it's time to read up on how
+etcd transactions actually work.
 
 ## Adding a deploy
 
@@ -310,8 +300,9 @@ use by mgmt. Oddly though, the only `Txn` method described here is for the
 It should be noted that the deployer code in mgmt does not use etcd interfaces
 directly, but rather the internal `interfaces.Client` interface from mgmt's own
 etcd package. According to its code comments, this interface is implemented by
-EmbdEtc, a type from the same package. Looking at its `MakeClient` method,
-that just seems to allow deriving a client object from a pre-existing client:
+EmbdEtc, a type from the same package. Objects of this type are created using
+the `MakeClient` method,
+which just seems to allow deriving a client object from a pre-existing client:
 
 ```
 func (obj *EmbdEtcd) MakeClient() (interfaces.Client, error) {
@@ -346,7 +337,7 @@ It's still more than a little confusing to me. It uses the `Txn` method through
 the
 KV interface associated to this client object, to create an etcd transaction
 (or so I suppose). The semantics are implemented through the `If`, `Then`, and
-`Else` method then.
+`Else` methods then.
 
 The etcd API documentation is not rich with information about how the response
 object returned by the `Commit` call should be interpreted. There is one very
@@ -369,7 +360,7 @@ mgmt run empty
 Here's what that looks like:
 
 ```
-# ETCDCTL_API=3 ~/etcdctl --endpoints 127.0.0.1:2380 member list
+# ~/etcdctl --endpoints 127.0.0.1:2380 member list
 8e9e05c52164694d, started, ubuntu-s-1vcpu-1gb-fra1-01, http://localhost:2380, http://localhost:2379, false
 ```
 
@@ -496,15 +487,15 @@ So this step has added
 
 As for the storage entries, their respective values are
 
- * nothing at all
- * the mcl code that was deployed
- * another list of key/value pairs:
-  * main: env1.mcl
-  * path: ""
-  * files: ""
-  * license: ""
-  * parentpathblock: false
-  * metadata: null
+  * nothing at all
+  * the mcl code that was deployed
+  * another list of key/value pairs:
+    * main: env1.mcl
+    * path: ""
+    * files: ""
+    * license: ""
+    * parentpathblock: false
+    * metadata: null
 
 Now to see exactly what happens with another attempted deployment.
 
@@ -533,9 +524,10 @@ wrong here.
 
 ## Bug hunt
 
-Wandering back into the source code, starting in
-[lib/deploy.go](https://github.com/purpleidea/mgmt/blob/e9af8a2595e336542c9dfc656fe808ddc6937a59/lib/deploy.go),
-I'm taking another hard look at the `deploy` function, when it strikes me: The
+Wandering back into the source code, I am starting in
+[lib/deploy.go](https://github.com/purpleidea/mgmt/blob/e9af8a2595e336542c9dfc656fe808ddc6937a59/lib/deploy.go)
+this time, trying to read from the beginning.
+Taking a hard look at the `deploy` function, it strikes me quite soon: The
 "hash" is retrieved in the following code block:
 
 ```
